@@ -26,6 +26,8 @@ enum class ErrorCode : std::uint16_t {
   invalid_value,
   unresolved_reference,
   circular_reference,
+  schema_invalid,
+  unsupported_dialect,
 
   // Schema keyword failures.
   type_mismatch,
@@ -89,6 +91,10 @@ enum class ErrorCode : std::uint16_t {
       return "unresolved_reference";
     case ErrorCode::circular_reference:
       return "circular_reference";
+    case ErrorCode::schema_invalid:
+      return "schema_invalid";
+    case ErrorCode::unsupported_dialect:
+      return "unsupported_dialect";
     case ErrorCode::type_mismatch:
       return "type_mismatch";
     case ErrorCode::enum_mismatch:
@@ -202,6 +208,13 @@ class ErrorPath {
     return *this;
   }
 
+  // Walks that push a token before descending have to pop it again.
+  void pop_back() noexcept {
+    if (!tokens_.empty()) {
+      tokens_.pop_back();
+    }
+  }
+
   [[nodiscard]] bool empty() const noexcept { return tokens_.empty(); }
   [[nodiscard]] std::size_t depth() const noexcept { return tokens_.size(); }
   [[nodiscard]] const std::vector<Token>& tokens() const noexcept { return tokens_; }
@@ -255,6 +268,11 @@ class ValidationResult {
   }
 
   void add_error(ValidationError error) { errors_.push_back(std::move(error)); }
+
+  // Hints the size of the error list up front, which keeps the common "valid
+  // document, no errors" case allocation free.
+  void reserve(std::size_t count) { errors_.reserve(count); }
+
 
   void add(ErrorCode code) {
     ValidationError error;

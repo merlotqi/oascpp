@@ -130,6 +130,10 @@ class ValueView {
 
   [[nodiscard]] bool valid() const noexcept { return doc_ != nullptr && index_ < doc_->nodes_.size(); }
 
+  // Arena index of this view. Stable for the lifetime of the document, so it is
+  // usable as a memoisation key.
+  [[nodiscard]] std::uint32_t index() const noexcept { return index_; }
+
   [[nodiscard]] ValueKind kind() const noexcept { return valid() ? node().kind : ValueKind::null_value; }
 
   [[nodiscard]] bool is_null() const noexcept { return kind() == ValueKind::null_value; }
@@ -321,6 +325,81 @@ inline ValueView ParsedDocument::root() const noexcept {
     return ValueView();
   }
   return ValueView(this, 0);
+}
+
+// Structural equality with JSON semantics, which differ from C++ equality in one
+// important way: numbers compare numerically across kinds, so 1 == 1.0. This is
+// what enum, const and uniqueItems need.
+[[nodiscard]] inline bool deep_equal(const ValueView& lhs, const ValueView& rhs) noexcept {
+  const bool lhs_valid = lhs.valid();
+  const bool rhs_valid = rhs.valid();
+  if (!lhs_valid || !rhs_valid) {
+    return lhs_valid == rhs_valid;
+  }
+
+  const ValueKind lhs_kind = lhs.kind();
+  const ValueKind rhs_kind = rhs.kind();
+  const bool lhs_number = lhs_kind == ValueKind::integer || lhs_kind == ValueKind::real;
+  const bool rhs_number = rhs_kind == ValueKind::integer || rhs_kind == ValueKind::real;
+
+  if (lhs_number || rhs_number) {
+    if (!(lhs_number && rhs_number)) {
+      return false;
+    }
+    const NumberView a = lhs.as_number();
+    const NumberView b = rhs.as_number();
+    if (a.is_integer && b.is_integer) {
+      if (a.is_unsigned && b.is_unsigned) {
+        return a.as_unsigned == b.as_unsigned;
+      }
+      if (!a.is_unsigned && !b.is_unsigned) {
+        return a.as_signed == b.as_signed;
+      }
+      const NumberView& wide = a.is_unsigned ? a : b;
+      const NumberView& narrow = a.is_unsigned ? b : a;
+      return narrow.as_signed >= 0 &&
+             wide.as_unsigned == static_cast<std::uint64_t>(narrow.as_signed);
+    }
+    return a.as_real == b.as_real;
+  }
+
+  if (lhs_kind != rhs_kind) {
+    return false;
+  }
+
+  switch (lhs_kind) {
+    case ValueKind::null_value:
+      return true;
+    case ValueKind::boolean:
+      return lhs.as_boolean() == rhs.as_boolean();
+    case ValueKind::string:
+      return lhs.as_string() == rhs.as_string();
+    case ValueKind::array: {
+      if (lhs.size() != rhs.size()) {
+        return false;
+      }
+      for (std::size_t index = 0; index < lhs.size(); ++index) {
+        if (!deep_equal(lhs.at(index), rhs.at(index))) {
+          return false;
+        }
+      }
+      return true;
+    }
+    case ValueKind::object: {
+      if (lhs.size() != rhs.size()) {
+        return false;
+      }
+      for (const ValueView member : lhs) {
+        const ValueView other = rhs.find(member.key());
+        if (!other.valid() || !deep_equal(member, other)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    default:
+      return false;
+  }
 }
 
 }  // namespace oascpp

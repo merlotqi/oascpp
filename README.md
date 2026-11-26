@@ -9,17 +9,34 @@ a specific parser.
 
 ## Status
 
-Pre-alpha (v0.1). Available today:
+Pre-alpha (v0.2). Available today:
 
-- `oascpp/value.hpp` — arena value model (`ParsedDocument`, `ValueView`)
+- `oascpp/value.hpp` — arena value model (`ParsedDocument`, `ValueView`, `deep_equal`)
 - `oascpp/document_builder.hpp` — arena builder used by adapters and tests
 - `oascpp/json_pointer.hpp` — RFC 6901 escaping helpers
 - `oascpp/error.hpp` — `ErrorCode`, `ErrorPath`, `ValidationError`, `ValidationResult`
 - `oascpp/result.hpp` — `Result<T>` for cold, single-error entry points
+- `oascpp/jsonschema.hpp` — JSON Schema 2020-12 compiler and validator, plus the
+  owning `jsonschema::Schema` wrapper; individual pieces live in
+  `oascpp/jsonschema/{dialect,schema,compiler,validator}.hpp`
 - `oascpp/adapters/nlohmann_json.hpp` — optional nlohmann/json adapter
 
-Not implemented yet: JSON Schema engine, OpenAPI document model, path matching,
-parameter serialization, request/response pipelines.
+Not implemented yet: `unevaluatedProperties` / `unevaluatedItems` (needs
+annotation tracking), dynamic scope for `$dynamicRef`, external `$ref` loading,
+`pattern` and `format` engines (both are injectable seams), the OpenAPI document
+model, path matching, parameter serialization, request/response pipelines.
+
+### Schema engine notes
+
+- One interpreter serves every dialect; `DialectProfile` is data, not a second
+  compiler. 2020-12 and OpenAPI 3.1 are supported today, other dialects report
+  `unsupported_dialect` instead of silently mis-validating.
+- `$ref` is resolved at compile time and cycles are legal. External references
+  are a compile error until a loader seam lands.
+- `pattern` and `format` are only interpreted when a matcher is installed in
+  `jsonschema::ValidationOptions`; the core stays free of `<regex>`.
+- `propertyNames` validates names through a scratch document so there is exactly
+  one interpretation path.
 
 ## Requirements
 

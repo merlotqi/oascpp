@@ -4,7 +4,8 @@ add_executable(oascpp_tests
   test_json_pointer.cpp
   test_error.cpp
   test_result.cpp
-  test_nlohmann_json.cpp)
+  test_nlohmann_json.cpp
+  test_schema.cpp)
 
 target_link_libraries(oascpp_tests PRIVATE oascpp::oascpp)
 
