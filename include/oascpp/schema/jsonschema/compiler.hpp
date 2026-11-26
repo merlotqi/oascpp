@@ -212,6 +212,8 @@ class SchemaCompiler {
 }  // namespace jsonschema
 }  // namespace oascpp
 
-#include "oascpp/schema/jsonschema/detail/compiler_keywords.hpp"
+#include "oascpp/schema/jsonschema/detail/compiler_keyword_core.hpp"
+#include "oascpp/schema/jsonschema/detail/compiler_keyword_object_composition.hpp"
+#include "oascpp/schema/jsonschema/detail/compiler_keyword_string_array.hpp"
 #include "oascpp/schema/jsonschema/detail/compiler_references.hpp"
 #include "oascpp/schema/jsonschema/detail/compiler_storage.hpp"

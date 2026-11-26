@@ -19,8 +19,6 @@ Pre-alpha (v0.2). Available today:
 - `oascpp/schema/jsonschema.hpp` — JSON Schema compiler and validator, plus the
   owning `jsonschema::Schema` wrapper; components live in
   `oascpp/schema/jsonschema/{dialect,compiled_schema,compiler,validator}.hpp`.
-  The former `oascpp/jsonschema...` include paths remain available as
-  compatibility headers.
 - `oascpp/adapters/nlohmann_json.hpp` — optional nlohmann/json adapter
 
 Not implemented yet: `unevaluatedProperties` / `unevaluatedItems` (needs

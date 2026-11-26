@@ -2,12 +2,11 @@
 #include <string_view>
 
 #include "json_dsl.hpp"
-#include "oascpp/jsonschema.hpp"
-#include "oascpp/jsonschema/compiler.hpp"
-#include "oascpp/jsonschema/dialect.hpp"
-#include "oascpp/jsonschema/schema.hpp"
-#include "oascpp/jsonschema/validator.hpp"
 #include "oascpp/schema/jsonschema.hpp"
+#include "oascpp/schema/jsonschema/compiled_schema.hpp"
+#include "oascpp/schema/jsonschema/compiler.hpp"
+#include "oascpp/schema/jsonschema/dialect.hpp"
+#include "oascpp/schema/jsonschema/validator.hpp"
 #include "test_framework.hpp"
 
 namespace {
