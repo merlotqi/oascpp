@@ -7,9 +7,8 @@
 // than a second compiler is deliberate.
 
 #include <cstdint>
+#include <oascpp/value.hpp>
 #include <string_view>
-
-#include "oascpp/value.hpp"
 
 namespace oascpp {
 namespace jsonschema {

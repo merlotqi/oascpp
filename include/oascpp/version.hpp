@@ -6,9 +6,9 @@
 #include <string_view>
 
 #define OASCPP_VERSION_MAJOR 0
-#define OASCPP_VERSION_MINOR 1
+#define OASCPP_VERSION_MINOR 3
 #define OASCPP_VERSION_PATCH 0
-#define OASCPP_VERSION_STRING "0.1.0"
+#define OASCPP_VERSION_STRING "0.3.0"
 
 namespace oascpp {
 

@@ -1,10 +1,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <oascpp/adapters/nlohmann_json.hpp>
 #include <string>
 #include <string_view>
 
-#include "oascpp/adapters/nlohmann_json.hpp"
 #include "test_framework.hpp"
 
 #if OASCPP_HAS_NLOHMANN_JSON

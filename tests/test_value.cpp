@@ -1,10 +1,10 @@
 #include <cstddef>
 #include <cstdint>
+#include <oascpp/document_builder.hpp>
+#include <oascpp/value.hpp>
 #include <string>
 #include <string_view>
 
-#include "oascpp/document_builder.hpp"
-#include "oascpp/value.hpp"
 #include "test_framework.hpp"
 
 namespace {

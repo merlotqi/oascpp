@@ -1,4 +1,4 @@
-#include "oascpp/json_pointer.hpp"
+#include <oascpp/json_pointer.hpp>
 
 namespace oascpp {
 

@@ -1,6 +1,6 @@
+#include <oascpp/json_pointer.hpp>
 #include <string>
 
-#include "oascpp/json_pointer.hpp"
 #include "test_framework.hpp"
 
 OASCPP_TEST(pointer_escapes_reserved_characters) {

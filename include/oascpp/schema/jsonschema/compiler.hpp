@@ -14,18 +14,15 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <oascpp/error.hpp>
+#include <oascpp/json_pointer.hpp>
+#include <oascpp/result.hpp>
+#include <oascpp/schema/jsonschema/compiled_schema.hpp>
+#include <oascpp/schema/jsonschema/dialect.hpp>
+#include <oascpp/value.hpp>
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <utility>
-#include <vector>
-
-#include "oascpp/error.hpp"
-#include "oascpp/json_pointer.hpp"
-#include "oascpp/result.hpp"
-#include "oascpp/schema/jsonschema/compiled_schema.hpp"
-#include "oascpp/schema/jsonschema/dialect.hpp"
-#include "oascpp/value.hpp"
 
 namespace oascpp {
 namespace jsonschema {

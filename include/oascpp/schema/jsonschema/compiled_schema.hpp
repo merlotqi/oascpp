@@ -7,11 +7,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <oascpp/schema/jsonschema/dialect.hpp>
+#include <oascpp/value.hpp>
 #include <string_view>
 #include <vector>
-
-#include "oascpp/schema/jsonschema/dialect.hpp"
-#include "oascpp/value.hpp"
 
 namespace oascpp {
 namespace jsonschema {

@@ -1,7 +1,6 @@
 #include <memory>
+#include <oascpp/schema/jsonschema.hpp>
 #include <utility>
-
-#include "oascpp/schema/jsonschema.hpp"
 
 namespace oascpp {
 namespace jsonschema {

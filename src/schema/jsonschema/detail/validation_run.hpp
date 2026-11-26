@@ -1,14 +1,11 @@
 #pragma once
 
-#include <algorithm>
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <oascpp/schema/jsonschema/validator.hpp>
 #include <utility>
 #include <vector>
-
-#include "oascpp/schema/jsonschema/validator.hpp"
 
 namespace oascpp {
 namespace jsonschema {

@@ -1,16 +1,16 @@
 #include <cstdint>
 #include <limits>
+#include <oascpp/binding.hpp>
 #include <utility>
 
 #include "binding_fixture.hpp"
 #include "json_dsl.hpp"
-#include "oascpp/binding.hpp"
 #include "test_framework.hpp"
 
 using oascpp_test::Json;
-using oascpp_test::User;
 using oascpp_test::make_document;
 using oascpp_test::register_user_bindings;
+using oascpp_test::User;
 
 OASCPP_TEST(binding_decodes_nested_objects_and_arrays_registered_in_another_cpp) {
   oascpp::Bindings bindings;
@@ -47,8 +47,8 @@ OASCPP_TEST(binding_reports_nested_field_and_array_element_paths) {
   const auto document = make_document(Json::object({
       {"name", "Alice"},
       {"home", Json::object({})},
-      {"addresses", Json::array({Json::object({{"postal-code", 10001}}),
-                                  Json::object({{"postal-code", 2147483648LL}})})},
+      {"addresses",
+       Json::array({Json::object({{"postal-code", 10001}}), Json::object({{"postal-code", 2147483648LL}})})},
       {"scores", Json::array({Json::array({true})})},
       {"office", nullptr},
       {"flags", Json::array({})},
@@ -88,6 +88,5 @@ OASCPP_TEST(binding_checks_integer_limits_and_missing_registration) {
 
   const auto object = make_document(Json::object({}));
   const auto missing = bindings.decode<User>(object.root());
-  OASCPP_CHECK(!missing &&
-               missing.diagnostics().first_error_code() == oascpp::ErrorCode::binding_not_registered);
+  OASCPP_CHECK(!missing && missing.diagnostics().first_error_code() == oascpp::ErrorCode::binding_not_registered);
 }

@@ -6,6 +6,8 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <oascpp/error.hpp>
+#include <oascpp/value.hpp>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -16,9 +18,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
-#include "oascpp/error.hpp"
-#include "oascpp/value.hpp"
 
 namespace oascpp {
 
@@ -36,8 +35,7 @@ class DecodeResult {
  private:
   friend class Bindings;
 
-  DecodeResult(std::in_place_index_t<0>, T value)
-      : storage_(std::in_place_index<0>, std::move(value)) {}
+  DecodeResult(std::in_place_index_t<0>, T value) : storage_(std::in_place_index<0>, std::move(value)) {}
   DecodeResult(std::in_place_index_t<1>, ValidationResult errors)
       : storage_(std::in_place_index<1>, std::move(errors)) {}
 
@@ -47,11 +45,11 @@ class DecodeResult {
 template <class Owner, class Member>
 struct BoundField {
   std::string name;
-  Member Owner::*member;
+  Member Owner::* member;
 };
 
 template <class Owner, class Member>
-[[nodiscard]] BoundField<Owner, Member> field(std::string_view name, Member Owner::*member) {
+[[nodiscard]] BoundField<Owner, Member> field(std::string_view name, Member Owner::* member) {
   return {std::string(name), member};
 }
 
@@ -73,8 +71,7 @@ struct DecodeContext {
   ErrorPath path;
   ValidationResult errors;
 
-  bool report(ErrorCode code, std::string_view message, ValueView input,
-              std::string_view expected = {}) {
+  bool report(ErrorCode code, std::string_view message, ValueView input, std::string_view expected = {}) {
     ValidationError error;
     error.code = code;
     error.instance_path = path;
@@ -106,13 +103,11 @@ bool assign_integer(NumberView number, T& output) {
     return true;
   }
   if constexpr (std::is_signed_v<T>) {
-    if (number.as_signed < std::numeric_limits<T>::lowest() ||
-        number.as_signed > std::numeric_limits<T>::max()) {
+    if (number.as_signed < std::numeric_limits<T>::lowest() || number.as_signed > std::numeric_limits<T>::max()) {
       return false;
     }
   } else {
-    if (number.as_signed < 0 ||
-        static_cast<std::uintmax_t>(number.as_signed) > std::numeric_limits<T>::max()) {
+    if (number.as_signed < 0 || static_cast<std::uintmax_t>(number.as_signed) > std::numeric_limits<T>::max()) {
       return false;
     }
   }
@@ -128,8 +123,8 @@ class Bindings {
  public:
   template <class T, class... Fields>
   void bind(Fields... fields) {
-    const auto decode = [fields...](const Bindings& bindings, detail::DecodeContext& context,
-                                    ValueView input, void* destination) {
+    const auto decode = [fields...](const Bindings& bindings, detail::DecodeContext& context, ValueView input,
+                                    void* destination) {
       auto& output = *static_cast<T*>(destination);
       static_cast<void>(output);
       bool ok = true;
@@ -183,8 +178,8 @@ class Bindings {
         return context.report(ErrorCode::type_mismatch, "expected an integer", input, "integer");
       }
       if (!detail::assign_integer(input.as_number(), output)) {
-        return context.report(ErrorCode::invalid_value, "value cannot be represented as the C++ integer type",
-                              input, "integer in range");
+        return context.report(ErrorCode::invalid_value, "value cannot be represented as the C++ integer type", input,
+                              "integer in range");
       }
       return true;
     } else if constexpr (std::is_floating_point_v<T>) {
@@ -192,10 +187,9 @@ class Bindings {
         return context.report(ErrorCode::type_mismatch, "expected a number", input, "number");
       }
       const double value = input.as_double();
-      if (!std::isfinite(value) || value < std::numeric_limits<T>::lowest() ||
-          value > std::numeric_limits<T>::max()) {
-        return context.report(ErrorCode::invalid_value, "value is outside the C++ floating-point range",
-                              input, "finite number in range");
+      if (!std::isfinite(value) || value < std::numeric_limits<T>::lowest() || value > std::numeric_limits<T>::max()) {
+        return context.report(ErrorCode::invalid_value, "value is outside the C++ floating-point range", input,
+                              "finite number in range");
       }
       output = static_cast<T>(value);
       return true;

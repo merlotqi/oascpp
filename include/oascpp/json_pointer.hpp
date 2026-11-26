@@ -4,7 +4,6 @@
 // '~' with "~0" and '/' with "~1"; the unescape direction leaves unknown
 // escape sequences untouched instead of failing.
 
-#include <cstddef>
 #include <string>
 #include <string_view>
 

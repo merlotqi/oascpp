@@ -1,7 +1,6 @@
-#include "oascpp/value.hpp"
-
 #include <cstring>
 #include <limits>
+#include <oascpp/value.hpp>
 
 namespace oascpp {
 namespace detail {

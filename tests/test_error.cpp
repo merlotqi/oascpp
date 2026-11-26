@@ -1,9 +1,9 @@
 #include <cstddef>
+#include <oascpp/error.hpp>
 #include <string>
 #include <string_view>
 #include <utility>
 
-#include "oascpp/error.hpp"
 #include "test_framework.hpp"
 
 OASCPP_TEST(error_path_formats_a_json_pointer) {

@@ -5,9 +5,9 @@
 // JSON Schema engine has its own umbrella at <oascpp/schema/jsonschema.hpp> so
 // programs that only need the value model do not pay for it.
 
-#include "oascpp/document_builder.hpp"
-#include "oascpp/error.hpp"
-#include "oascpp/json_pointer.hpp"
-#include "oascpp/result.hpp"
-#include "oascpp/value.hpp"
-#include "oascpp/version.hpp"
+#include <oascpp/document_builder.hpp>
+#include <oascpp/error.hpp>
+#include <oascpp/json_pointer.hpp>
+#include <oascpp/result.hpp>
+#include <oascpp/value.hpp>
+#include <oascpp/version.hpp>

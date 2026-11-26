@@ -5,12 +5,11 @@
 // ValidationResult would be noise.
 
 #include <cassert>
+#include <oascpp/error.hpp>
 #include <optional>
 #include <string>
 #include <utility>
 #include <variant>
-
-#include "oascpp/error.hpp"
 
 namespace oascpp {
 

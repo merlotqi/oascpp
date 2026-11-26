@@ -1,6 +1,5 @@
-#include "oascpp/document_builder.hpp"
-
 #include <cassert>
+#include <oascpp/document_builder.hpp>
 
 namespace oascpp {
 

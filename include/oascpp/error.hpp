@@ -5,12 +5,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <oascpp/json_pointer.hpp>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
-
-#include "oascpp/json_pointer.hpp"
 
 namespace oascpp {
 

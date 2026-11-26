@@ -1,4 +1,4 @@
-#include "oascpp/schema/jsonschema/compiler.hpp"
+#include <oascpp/schema/jsonschema/compiler.hpp>
 
 namespace oascpp {
 namespace jsonschema {

@@ -6,19 +6,26 @@
 
 #include <cstddef>
 #include <initializer_list>
+#include <oascpp/document_builder.hpp>
+#include <oascpp/value.hpp>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
-#include "oascpp/document_builder.hpp"
-#include "oascpp/value.hpp"
-
 namespace oascpp_test {
 
 class Json {
  public:
-  enum class Kind : std::uint8_t { null_value, boolean, integer, real, string, array, object };
+  enum class Kind : std::uint8_t {
+    null_value,
+    boolean,
+    integer,
+    real,
+    string,
+    array,
+    object
+  };
 
   Json() = default;
   Json(std::nullptr_t) {}  // NOLINT: nullptr means JSON null

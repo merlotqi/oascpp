@@ -12,11 +12,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <oascpp/value.hpp>
 #include <string_view>
-#include <utility>
 #include <vector>
-
-#include "oascpp/value.hpp"
 
 namespace oascpp {
 
