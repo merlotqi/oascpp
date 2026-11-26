@@ -3,6 +3,11 @@
 
 #include "json_dsl.hpp"
 #include "oascpp/jsonschema.hpp"
+#include "oascpp/jsonschema/compiler.hpp"
+#include "oascpp/jsonschema/dialect.hpp"
+#include "oascpp/jsonschema/schema.hpp"
+#include "oascpp/jsonschema/validator.hpp"
+#include "oascpp/schema/jsonschema.hpp"
 #include "test_framework.hpp"
 
 namespace {
@@ -77,16 +82,13 @@ OASCPP_TEST(schema_checks_numeric_bounds) {
   OASCPP_CHECK(schema.validate(valid.root()).ok());
 
   const auto too_small = make_document(Json(-2));
-  OASCPP_CHECK(schema.validate(too_small.root()).first_error_code() ==
-               ErrorCode::numeric_minimum);
+  OASCPP_CHECK(schema.validate(too_small.root()).first_error_code() == ErrorCode::numeric_minimum);
 
   const auto at_exclusive_maximum = make_document(Json(10));
-  OASCPP_CHECK(schema.validate(at_exclusive_maximum.root()).first_error_code() ==
-               ErrorCode::numeric_exclusive_maximum);
+  OASCPP_CHECK(schema.validate(at_exclusive_maximum.root()).first_error_code() == ErrorCode::numeric_exclusive_maximum);
 
   const auto not_a_multiple = make_document(Json(7));
-  OASCPP_CHECK(schema.validate(not_a_multiple.root()).first_error_code() ==
-               ErrorCode::numeric_multiple_of);
+  OASCPP_CHECK(schema.validate(not_a_multiple.root()).first_error_code() == ErrorCode::numeric_multiple_of);
 }
 
 OASCPP_TEST(schema_counts_utf8_code_points) {
@@ -101,8 +103,7 @@ OASCPP_TEST(schema_counts_utf8_code_points) {
   OASCPP_CHECK(schema.validate(valid.root()).ok());
 
   const auto too_long = make_document(Json("hello!"));
-  OASCPP_CHECK(schema.validate(too_long.root()).first_error_code() ==
-               ErrorCode::string_max_length);
+  OASCPP_CHECK(schema.validate(too_long.root()).first_error_code() == ErrorCode::string_max_length);
 }
 
 OASCPP_TEST(schema_checks_array_prefix_and_items) {
@@ -122,8 +123,7 @@ OASCPP_TEST(schema_checks_array_prefix_and_items) {
   OASCPP_CHECK(prefix_result.first_error()->instance_path.to_string() == "/0");
 
   const auto too_short = make_document(Json::array({1}));
-  OASCPP_CHECK(schema.validate(too_short.root()).first_error_code() ==
-               ErrorCode::array_min_items);
+  OASCPP_CHECK(schema.validate(too_short.root()).first_error_code() == ErrorCode::array_min_items);
 }
 
 OASCPP_TEST(schema_rejects_duplicate_items) {
@@ -133,8 +133,7 @@ OASCPP_TEST(schema_rejects_duplicate_items) {
   }));
 
   const auto duplicate = make_document(Json::array({1, 2, 1}));
-  OASCPP_CHECK(schema.validate(duplicate.root()).first_error_code() ==
-               ErrorCode::array_unique_items);
+  OASCPP_CHECK(schema.validate(duplicate.root()).first_error_code() == ErrorCode::array_unique_items);
 
   // 1 and 1.0 are the same JSON number.
   const auto numeric_duplicate = make_document(Json::array({1, 1.0}));
@@ -153,12 +152,10 @@ OASCPP_TEST(schema_composition_keywords) {
   OASCPP_CHECK(schema.validate(valid.root()).ok());
 
   const auto no_branch = make_document(Json::object({{"c", 1}}));
-  OASCPP_CHECK(schema.validate(no_branch.root()).first_error_code() ==
-               ErrorCode::composition_any_of);
+  OASCPP_CHECK(schema.validate(no_branch.root()).first_error_code() == ErrorCode::composition_any_of);
 
   const auto forbidden = make_document(Json::object({{"a", 1}, {"forbidden", true}}));
-  OASCPP_CHECK(schema.validate(forbidden.root()).first_error_code() ==
-               ErrorCode::composition_not);
+  OASCPP_CHECK(schema.validate(forbidden.root()).first_error_code() == ErrorCode::composition_not);
 }
 
 OASCPP_TEST(schema_enum_and_const) {
@@ -174,21 +171,20 @@ OASCPP_TEST(schema_enum_and_const) {
 
   const js::Schema const_schema = compile_or_fail(Json::object({{"const", "fixed"}}));
   const auto wrong = make_document(Json("other"));
-  OASCPP_CHECK(const_schema.validate(wrong.root()).first_error_code() ==
-               ErrorCode::const_mismatch);
+  OASCPP_CHECK(const_schema.validate(wrong.root()).first_error_code() == ErrorCode::const_mismatch);
 }
 
 OASCPP_TEST(schema_resolves_recursive_refs) {
   const js::Schema schema = compile_or_fail(Json::object({
-      {"$defs", Json::object({{"node", Json::object({
-                    {"type", "object"},
-                    {"properties", Json::object({{"next", Json::object({{"$ref", "#/$defs/node"}})}})},
-                })}})},
+      {"$defs",
+       Json::object({{"node", Json::object({
+                                  {"type", "object"},
+                                  {"properties", Json::object({{"next", Json::object({{"$ref", "#/$defs/node"}})}})},
+                              })}})},
       {"$ref", "#/$defs/node"},
   }));
 
-  const auto valid = make_document(
-      Json::object({{"next", Json::object({{"next", Json::object({})}})}}));
+  const auto valid = make_document(Json::object({{"next", Json::object({{"next", Json::object({})}})}}));
   OASCPP_CHECK(schema.validate(valid.root()).ok());
 
   const auto invalid = make_document(Json::object({{"next", Json(3)}}));
@@ -212,8 +208,7 @@ OASCPP_TEST(schema_pattern_needs_a_matcher) {
   js::ValidationOptions options;
   options.pattern_matcher = [](std::string_view pattern, std::string_view candidate) {
     static_cast<void>(pattern);
-    return !candidate.empty() && candidate.front() == 'a' &&
-           candidate.find('b') == std::string_view::npos;
+    return !candidate.empty() && candidate.front() == 'a' && candidate.find('b') == std::string_view::npos;
   };
   const auto with_matcher = without_matcher.validate(instance.root(), options);
   OASCPP_CHECK(with_matcher.first_error_code() == ErrorCode::string_pattern);
@@ -224,15 +219,13 @@ OASCPP_TEST(schema_compile_rejects_bad_input) {
   OASCPP_CHECK(!unknown_type.has_value());
   OASCPP_CHECK(unknown_type.error().code == ErrorCode::schema_invalid);
 
-  const auto bad_reference =
-      js::Schema::compile(make_document(Json::object({{"$ref", "#/$defs/missing"}})));
+  const auto bad_reference = js::Schema::compile(make_document(Json::object({{"$ref", "#/$defs/missing"}})));
   OASCPP_CHECK(!bad_reference.has_value());
   OASCPP_CHECK(bad_reference.error().code == ErrorCode::unresolved_reference);
 
   js::CompileOptions options;
   options.dialect = js::Dialect::draft4;
-  const auto unsupported =
-      js::Schema::compile(make_document(Json::object({{"type", "string"}})), options);
+  const auto unsupported = js::Schema::compile(make_document(Json::object({{"type", "string"}})), options);
   OASCPP_CHECK(!unsupported.has_value());
   OASCPP_CHECK(unsupported.error().code == ErrorCode::unsupported_dialect);
 }

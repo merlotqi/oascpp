@@ -16,9 +16,11 @@ Pre-alpha (v0.2). Available today:
 - `oascpp/json_pointer.hpp` — RFC 6901 escaping helpers
 - `oascpp/error.hpp` — `ErrorCode`, `ErrorPath`, `ValidationError`, `ValidationResult`
 - `oascpp/result.hpp` — `Result<T>` for cold, single-error entry points
-- `oascpp/jsonschema.hpp` — JSON Schema 2020-12 compiler and validator, plus the
-  owning `jsonschema::Schema` wrapper; individual pieces live in
-  `oascpp/jsonschema/{dialect,schema,compiler,validator}.hpp`
+- `oascpp/schema/jsonschema.hpp` — JSON Schema compiler and validator, plus the
+  owning `jsonschema::Schema` wrapper; components live in
+  `oascpp/schema/jsonschema/{dialect,compiled_schema,compiler,validator}.hpp`.
+  The former `oascpp/jsonschema...` include paths remain available as
+  compatibility headers.
 - `oascpp/adapters/nlohmann_json.hpp` — optional nlohmann/json adapter
 
 Not implemented yet: `unevaluatedProperties` / `unevaluatedItems` (needs
