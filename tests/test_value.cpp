@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <oascpp/document_builder.hpp>
@@ -7,7 +9,6 @@
 #include <string_view>
 
 #include "json_dsl.hpp"
-#include "test_framework.hpp"
 
 namespace {
 
@@ -50,33 +51,33 @@ ParsedDocument make_sample_document() {
 
 }  // namespace
 
-OASCPP_TEST(value_root_exposes_the_first_node) {
+TEST(Oascpp, value_root_exposes_the_first_node) {
   const ParsedDocument document = make_sample_document();
   const ValueView root = document.root();
 
-  OASCPP_CHECK(root.valid());
-  OASCPP_CHECK(root.is_object());
-  OASCPP_CHECK(root.kind() == ValueKind::object);
-  OASCPP_CHECK_EQ(root.size(), std::size_t{6});
-  OASCPP_CHECK(!root.empty());
-  OASCPP_CHECK_EQ(document.node_count(), std::size_t{9});
+  EXPECT_TRUE(root.valid());
+  EXPECT_TRUE(root.is_object());
+  EXPECT_TRUE(root.kind() == ValueKind::object);
+  EXPECT_EQ(root.size(), std::size_t{6});
+  EXPECT_TRUE(!root.empty());
+  EXPECT_EQ(document.node_count(), std::size_t{9});
 }
 
-OASCPP_TEST(value_reads_scalars) {
+TEST(Oascpp, value_reads_scalars) {
   const ParsedDocument document = make_sample_document();
   const ValueView root = document.root();
 
-  OASCPP_CHECK_EQ(root.find("name").as_string(), std::string_view("oascpp"));
-  OASCPP_CHECK_EQ(root.find("count").as_integer(), std::int64_t{3});
-  OASCPP_CHECK(root.find("ratio").as_double() == 0.5);
-  OASCPP_CHECK(root.find("enabled").as_boolean());
-  OASCPP_CHECK(root.find("nothing").is_null());
-  OASCPP_CHECK(root.contains("name"));
-  OASCPP_CHECK(!root.contains("absent"));
-  OASCPP_CHECK(!root.find("absent").valid());
+  EXPECT_EQ(root.find("name").as_string(), std::string_view("oascpp"));
+  EXPECT_EQ(root.find("count").as_integer(), std::int64_t{3});
+  EXPECT_TRUE(root.find("ratio").as_double() == 0.5);
+  EXPECT_TRUE(root.find("enabled").as_boolean());
+  EXPECT_TRUE(root.find("nothing").is_null());
+  EXPECT_TRUE(root.contains("name"));
+  EXPECT_TRUE(!root.contains("absent"));
+  EXPECT_TRUE(!root.find("absent").valid());
 }
 
-OASCPP_TEST(value_iterates_members_in_append_order) {
+TEST(Oascpp, value_iterates_members_in_append_order) {
   const ParsedDocument document = make_sample_document();
   const ValueView root = document.root();
 
@@ -88,52 +89,52 @@ OASCPP_TEST(value_iterates_members_in_append_order) {
     ++members;
   }
 
-  OASCPP_CHECK_EQ(members, std::size_t{6});
-  OASCPP_CHECK_EQ(keys, std::string("name,count,tags,ratio,enabled,nothing,"));
+  EXPECT_EQ(members, std::size_t{6});
+  EXPECT_EQ(keys, std::string("name,count,tags,ratio,enabled,nothing,"));
 }
 
-OASCPP_TEST(value_reads_array_elements) {
+TEST(Oascpp, value_reads_array_elements) {
   const ParsedDocument document = make_sample_document();
   const ValueView tags = document.root().find("tags");
 
-  OASCPP_CHECK(tags.is_array());
-  OASCPP_CHECK_EQ(tags.size(), std::size_t{2});
-  OASCPP_CHECK_EQ(tags.at(0).as_string(), std::string_view("a"));
-  OASCPP_CHECK_EQ(tags.at(1).as_string(), std::string_view("b"));
-  OASCPP_CHECK(!tags.at(2).valid());
+  EXPECT_TRUE(tags.is_array());
+  EXPECT_EQ(tags.size(), std::size_t{2});
+  EXPECT_EQ(tags.at(0).as_string(), std::string_view("a"));
+  EXPECT_EQ(tags.at(1).as_string(), std::string_view("b"));
+  EXPECT_TRUE(!tags.at(2).valid());
 
   std::string joined;
   for (const ValueView element : tags) {
     joined.append(element.as_string());
   }
-  OASCPP_CHECK_EQ(joined, std::string("ab"));
+  EXPECT_EQ(joined, std::string("ab"));
 }
 
-OASCPP_TEST(value_invalid_views_are_safe) {
+TEST(Oascpp, value_invalid_views_are_safe) {
   const ValueView missing;
 
-  OASCPP_CHECK(!missing.valid());
-  OASCPP_CHECK(missing.kind() == ValueKind::null_value);
-  OASCPP_CHECK_EQ(missing.size(), std::size_t{0});
-  OASCPP_CHECK_EQ(missing.as_string(), std::string_view());
-  OASCPP_CHECK(!missing.find("x").valid());
-  OASCPP_CHECK(missing.begin() == missing.end());
+  EXPECT_TRUE(!missing.valid());
+  EXPECT_TRUE(missing.kind() == ValueKind::null_value);
+  EXPECT_EQ(missing.size(), std::size_t{0});
+  EXPECT_EQ(missing.as_string(), std::string_view());
+  EXPECT_TRUE(!missing.find("x").valid());
+  EXPECT_TRUE(missing.begin() == missing.end());
 
   const ParsedDocument document = make_sample_document();
   const ValueView name = document.root().find("name");
-  OASCPP_CHECK(!name.at(0).valid());
-  OASCPP_CHECK_EQ(name.size(), std::size_t{0});
+  EXPECT_TRUE(!name.at(0).valid());
+  EXPECT_EQ(name.size(), std::size_t{0});
 }
 
-OASCPP_TEST(value_empty_document_has_no_root) {
+TEST(Oascpp, value_empty_document_has_no_root) {
   const ParsedDocument document;
 
-  OASCPP_CHECK(document.empty());
-  OASCPP_CHECK_EQ(document.node_count(), std::size_t{0});
-  OASCPP_CHECK(!document.root().valid());
+  EXPECT_TRUE(document.empty());
+  EXPECT_EQ(document.node_count(), std::size_t{0});
+  EXPECT_TRUE(!document.root().valid());
 }
 
-OASCPP_TEST(value_keeps_number_precision) {
+TEST(Oascpp, value_keeps_number_precision) {
   DocumentBuilder builder;
   const DocumentBuilder::NodeId array = builder.make_array();
 
@@ -147,18 +148,18 @@ OASCPP_TEST(value_keeps_number_precision) {
   const ValueView root = document.root();
 
   const oascpp::NumberView signed_number = root.at(0).as_number();
-  OASCPP_CHECK(signed_number.is_integer);
-  OASCPP_CHECK(!signed_number.is_unsigned);
-  OASCPP_CHECK_EQ(signed_number.as_signed, std::int64_t{-7});
+  EXPECT_TRUE(signed_number.is_integer);
+  EXPECT_TRUE(!signed_number.is_unsigned);
+  EXPECT_EQ(signed_number.as_signed, std::int64_t{-7});
 
   const oascpp::NumberView wide_number = root.at(1).as_number();
-  OASCPP_CHECK(wide_number.is_integer);
-  OASCPP_CHECK(wide_number.is_unsigned);
-  OASCPP_CHECK_EQ(wide_number.as_unsigned, std::uint64_t{18446744073709551615ULL});
-  OASCPP_CHECK_EQ(wide_number.as_signed, std::int64_t{0});
+  EXPECT_TRUE(wide_number.is_integer);
+  EXPECT_TRUE(wide_number.is_unsigned);
+  EXPECT_EQ(wide_number.as_unsigned, std::uint64_t{18446744073709551615ULL});
+  EXPECT_EQ(wide_number.as_signed, std::int64_t{0});
 }
 
-OASCPP_TEST(value_stores_empty_keys_and_strings) {
+TEST(Oascpp, value_stores_empty_keys_and_strings) {
   DocumentBuilder builder;
   const DocumentBuilder::NodeId root = builder.make_object();
   const DocumentBuilder::NodeId empty = builder.make_string("");
@@ -167,29 +168,29 @@ OASCPP_TEST(value_stores_empty_keys_and_strings) {
   const ParsedDocument document = builder.finish();
   const ValueView member = document.root().find("");
 
-  OASCPP_CHECK(member.valid());
-  OASCPP_CHECK_EQ(member.as_string(), std::string_view());
-  OASCPP_CHECK_EQ(member.key(), std::string_view());
-  OASCPP_CHECK_EQ(document.root().size(), std::size_t{1});
+  EXPECT_TRUE(member.valid());
+  EXPECT_EQ(member.as_string(), std::string_view());
+  EXPECT_EQ(member.key(), std::string_view());
+  EXPECT_EQ(document.root().size(), std::size_t{1});
 }
 
-OASCPP_TEST(value_compares_by_identity) {
+TEST(Oascpp, value_compares_by_identity) {
   const ParsedDocument document = make_sample_document();
   const ValueView root = document.root();
 
-  OASCPP_CHECK(root == document.root());
-  OASCPP_CHECK(root != root.find("name"));
-  OASCPP_CHECK(ValueView() == ValueView());
+  EXPECT_TRUE(root == document.root());
+  EXPECT_TRUE(root != root.find("name"));
+  EXPECT_TRUE(ValueView() == ValueView());
 }
 
-OASCPP_TEST(value_compares_large_numbers_without_rounding_integers) {
+TEST(Oascpp, value_compares_large_numbers_without_rounding_integers) {
   const ParsedDocument integer = make_document(oascpp_test::Json(9007199254740993LL));
   const ParsedDocument rounded_real = make_document(oascpp_test::Json(9007199254740992.0));
 
-  OASCPP_CHECK(!oascpp::deep_equal(integer.root(), rounded_real.root()));
+  EXPECT_TRUE(!oascpp::deep_equal(integer.root(), rounded_real.root()));
 }
 
-OASCPP_TEST(document_builder_rejects_reused_nodes_and_cycles) {
+TEST(Oascpp, document_builder_rejects_reused_nodes_and_cycles) {
   DocumentBuilder builder;
   const auto root = builder.make_array();
   const auto object = builder.make_object();
@@ -201,7 +202,7 @@ OASCPP_TEST(document_builder_rejects_reused_nodes_and_cycles) {
   } catch (const std::invalid_argument&) {
     wrong_parent_rejected = true;
   }
-  OASCPP_CHECK(wrong_parent_rejected);
+  EXPECT_TRUE(wrong_parent_rejected);
 
   builder.append(root, object);
   bool reused_node_rejected = false;
@@ -210,7 +211,7 @@ OASCPP_TEST(document_builder_rejects_reused_nodes_and_cycles) {
   } catch (const std::logic_error&) {
     reused_node_rejected = true;
   }
-  OASCPP_CHECK(reused_node_rejected);
+  EXPECT_TRUE(reused_node_rejected);
 
   builder.append_member(object, "nested", nested);
   bool cycle_rejected = false;
@@ -219,5 +220,5 @@ OASCPP_TEST(document_builder_rejects_reused_nodes_and_cycles) {
   } catch (const std::logic_error&) {
     cycle_rejected = true;
   }
-  OASCPP_CHECK(cycle_rejected);
+  EXPECT_TRUE(cycle_rejected);
 }

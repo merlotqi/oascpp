@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <limits>
 #include <oascpp/binding.hpp>
@@ -5,14 +7,13 @@
 
 #include "binding_fixture.hpp"
 #include "json_dsl.hpp"
-#include "test_framework.hpp"
 
 using oascpp_test::Json;
 using oascpp_test::make_document;
 using oascpp_test::register_user_bindings;
 using oascpp_test::User;
 
-OASCPP_TEST(binding_decodes_nested_objects_and_arrays_registered_in_another_cpp) {
+TEST(Oascpp, binding_decodes_nested_objects_and_arrays_registered_in_another_cpp) {
   oascpp::Bindings bindings;
   register_user_bindings(bindings);
   auto result = [&bindings] {
@@ -28,20 +29,20 @@ OASCPP_TEST(binding_decodes_nested_objects_and_arrays_registered_in_another_cpp)
     return bindings.decode<User>(document.root());
   }();
 
-  OASCPP_CHECK(result.has_value());
+  EXPECT_TRUE(result.has_value());
   if (!result) {
     return;
   }
   const User user = std::move(result).value();
-  OASCPP_CHECK_EQ(user.name, "Alice");
-  OASCPP_CHECK_EQ(user.home.postcode, 10001);
-  OASCPP_CHECK_EQ(user.addresses.at(1).postcode, 10002);
-  OASCPP_CHECK_EQ(user.scores.at(0).at(1), 2);
-  OASCPP_CHECK(!user.office);
-  OASCPP_CHECK(user.flags.at(0) && !user.flags.at(1));
+  EXPECT_EQ(user.name, "Alice");
+  EXPECT_EQ(user.home.postcode, 10001);
+  EXPECT_EQ(user.addresses.at(1).postcode, 10002);
+  EXPECT_EQ(user.scores.at(0).at(1), 2);
+  EXPECT_TRUE(!user.office);
+  EXPECT_TRUE(user.flags.at(0) && !user.flags.at(1));
 }
 
-OASCPP_TEST(binding_reports_nested_field_and_array_element_paths) {
+TEST(Oascpp, binding_reports_nested_field_and_array_element_paths) {
   oascpp::Bindings bindings;
   register_user_bindings(bindings);
   const auto document = make_document(Json::object({
@@ -54,39 +55,39 @@ OASCPP_TEST(binding_reports_nested_field_and_array_element_paths) {
       {"flags", Json::array({})},
   }));
   const auto result = bindings.decode<User>(document.root());
-  OASCPP_CHECK(!result);
+  EXPECT_TRUE(!result);
   if (result) {
     return;
   }
   const auto& errors = result.diagnostics().errors();
-  OASCPP_CHECK_EQ(errors.size(), 3u);
+  EXPECT_EQ(errors.size(), 3u);
   if (errors.size() != 3) {
     return;
   }
-  OASCPP_CHECK_EQ(errors[0].instance_path.to_string(), "/home/postal-code");
-  OASCPP_CHECK(errors[0].code == oascpp::ErrorCode::missing_field);
-  OASCPP_CHECK_EQ(errors[1].instance_path.to_string(), "/addresses/1/postal-code");
-  OASCPP_CHECK(errors[1].code == oascpp::ErrorCode::invalid_value);
-  OASCPP_CHECK_EQ(errors[2].instance_path.to_string(), "/scores/0/0");
-  OASCPP_CHECK(errors[2].code == oascpp::ErrorCode::type_mismatch);
+  EXPECT_EQ(errors[0].instance_path.to_string(), "/home/postal-code");
+  EXPECT_TRUE(errors[0].code == oascpp::ErrorCode::missing_field);
+  EXPECT_EQ(errors[1].instance_path.to_string(), "/addresses/1/postal-code");
+  EXPECT_TRUE(errors[1].code == oascpp::ErrorCode::invalid_value);
+  EXPECT_EQ(errors[2].instance_path.to_string(), "/scores/0/0");
+  EXPECT_TRUE(errors[2].code == oascpp::ErrorCode::type_mismatch);
 }
 
-OASCPP_TEST(binding_checks_integer_limits_and_missing_registration) {
+TEST(Oascpp, binding_checks_integer_limits_and_missing_registration) {
   const oascpp::Bindings bindings;
   oascpp::DocumentBuilder builder;
   static_cast<void>(builder.make_unsigned(std::numeric_limits<std::uint64_t>::max()));
   const auto high = builder.finish();
   const auto wide = bindings.decode<std::uint64_t>(high.root());
-  OASCPP_CHECK(wide && wide.value() == std::numeric_limits<std::uint64_t>::max());
-  OASCPP_CHECK(!bindings.decode<std::int64_t>(high.root()));
+  EXPECT_TRUE(wide && wide.value() == std::numeric_limits<std::uint64_t>::max());
+  EXPECT_TRUE(!bindings.decode<std::int64_t>(high.root()));
 
   const auto exact = make_document(Json(-9223372036854775808.0));
   const auto low = bindings.decode<std::int64_t>(exact.root());
-  OASCPP_CHECK(low && low.value() == std::numeric_limits<std::int64_t>::lowest());
+  EXPECT_TRUE(low && low.value() == std::numeric_limits<std::int64_t>::lowest());
   const auto above = make_document(Json(9223372036854775808.0));
-  OASCPP_CHECK(!bindings.decode<std::int64_t>(above.root()));
+  EXPECT_TRUE(!bindings.decode<std::int64_t>(above.root()));
 
   const auto object = make_document(Json::object({}));
   const auto missing = bindings.decode<User>(object.root());
-  OASCPP_CHECK(!missing && missing.diagnostics().first_error_code() == oascpp::ErrorCode::binding_not_registered);
+  EXPECT_TRUE(!missing && missing.diagnostics().first_error_code() == oascpp::ErrorCode::binding_not_registered);
 }

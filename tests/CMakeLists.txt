@@ -1,5 +1,19 @@
+include(FetchContent)
+
+set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+if(MSVC)
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif()
+
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.16.0
+  GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(googletest)
+
 add_executable(oascpp_tests
-  main.cpp
   binding_fixture.cpp
   test_binding.cpp
   test_value.cpp
@@ -9,7 +23,7 @@ add_executable(oascpp_tests
   test_nlohmann_json.cpp
   test_schema.cpp)
 
-target_link_libraries(oascpp_tests PRIVATE oascpp::oascpp)
+target_link_libraries(oascpp_tests PRIVATE oascpp::oascpp GTest::gtest_main)
 
 if(MSVC)
   target_compile_options(oascpp_tests PRIVATE /W4)

@@ -53,6 +53,8 @@ model, path matching, parameter serialization, request/response pipelines.
 
 - a C++17 compiler
 - CMake 3.16 or newer to build the tests
+- Git and network access on the first test configure; CMake FetchContent downloads
+  GoogleTest 1.16.0
 - link applications against the exported `oascpp::oascpp` static-library target
 - optionally [nlohmann/json](https://github.com/nlohmann/json); without it the
   adapter header compiles to nothing
