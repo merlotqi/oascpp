@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <oascpp/schema/jsonschema/validator.hpp>
+#include <oascpp/schema/validator.hpp>
 #include <utility>
 #include <vector>
 

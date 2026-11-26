@@ -1,5 +1,5 @@
 #include <cmath>
-#include <oascpp/schema/jsonschema/validator.hpp>
+#include <oascpp/schema/validator.hpp>
 #include <utility>
 
 #include "detail/validation_run.hpp"

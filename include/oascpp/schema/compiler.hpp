@@ -17,8 +17,8 @@
 #include <oascpp/error.hpp>
 #include <oascpp/json_pointer.hpp>
 #include <oascpp/result.hpp>
-#include <oascpp/schema/jsonschema/compiled_schema.hpp>
-#include <oascpp/schema/jsonschema/dialect.hpp>
+#include <oascpp/schema/compiled_schema.hpp>
+#include <oascpp/schema/dialect.hpp>
 #include <oascpp/value.hpp>
 #include <string>
 #include <string_view>

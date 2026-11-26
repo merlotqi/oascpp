@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <functional>
 #include <oascpp/error.hpp>
-#include <oascpp/schema/jsonschema/compiled_schema.hpp>
+#include <oascpp/schema/compiled_schema.hpp>
 #include <oascpp/value.hpp>
 #include <string_view>
 

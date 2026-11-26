@@ -19,7 +19,7 @@ Pre-alpha (v0.2). Available today:
 - `oascpp/result.hpp` — `Result<T>` for cold, single-error entry points
 - `oascpp/schema/jsonschema.hpp` — JSON Schema compiler and validator, plus the
   owning `jsonschema::Schema` wrapper; components live in
-  `oascpp/schema/jsonschema/{dialect,compiled_schema,compiler,validator}.hpp`.
+  `oascpp/schema/{dialect,compiled_schema,compiler,validator}.hpp`.
 - `oascpp/adapters/nlohmann_json.hpp` — optional nlohmann/json adapter
 
 Not implemented yet: `unevaluatedProperties` / `unevaluatedItems` (needs

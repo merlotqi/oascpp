@@ -12,18 +12,18 @@ add_library(oascpp STATIC
   src/error.cpp
   src/json_pointer.cpp
   src/value.cpp
-  src/schema/jsonschema/compiler.cpp
-  src/schema/jsonschema/detail/compiler_keyword_core.cpp
-  src/schema/jsonschema/detail/compiler_keyword_object_composition.cpp
-  src/schema/jsonschema/detail/compiler_keyword_string_array.cpp
-  src/schema/jsonschema/detail/compiler_references.cpp
-  src/schema/jsonschema/detail/compiler_storage.cpp
-  src/schema/jsonschema/validator.cpp
-  src/schema/jsonschema/detail/validator_composition.cpp
-  src/schema/jsonschema/detail/validator_helpers.cpp
-  src/schema/jsonschema/detail/validator_number_string_array.cpp
-  src/schema/jsonschema/detail/validator_object.cpp
-  src/schema/jsonschema/schema.cpp)
+  src/schema/compiler.cpp
+  src/schema/detail/compiler_keyword_core.cpp
+  src/schema/detail/compiler_keyword_object_composition.cpp
+  src/schema/detail/compiler_keyword_string_array.cpp
+  src/schema/detail/compiler_references.cpp
+  src/schema/detail/compiler_storage.cpp
+  src/schema/validator.cpp
+  src/schema/detail/validator_composition.cpp
+  src/schema/detail/validator_helpers.cpp
+  src/schema/detail/validator_number_string_array.cpp
+  src/schema/detail/validator_object.cpp
+  src/schema/schema.cpp)
 add_library(oascpp::oascpp ALIAS oascpp)
 
 target_compile_features(oascpp PUBLIC cxx_std_17)

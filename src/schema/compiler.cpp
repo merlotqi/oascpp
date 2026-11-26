@@ -1,4 +1,4 @@
-#include <oascpp/schema/jsonschema/compiler.hpp>
+#include <oascpp/schema/compiler.hpp>
 #include <utility>
 
 namespace oascpp {

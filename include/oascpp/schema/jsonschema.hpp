@@ -5,10 +5,10 @@
 // schema against a document you own, then validate instances against it.
 
 #include <memory>
-#include <oascpp/schema/jsonschema/compiled_schema.hpp>
-#include <oascpp/schema/jsonschema/compiler.hpp>
-#include <oascpp/schema/jsonschema/dialect.hpp>
-#include <oascpp/schema/jsonschema/validator.hpp>
+#include <oascpp/schema/compiled_schema.hpp>
+#include <oascpp/schema/compiler.hpp>
+#include <oascpp/schema/dialect.hpp>
+#include <oascpp/schema/validator.hpp>
 
 namespace oascpp {
 namespace jsonschema {

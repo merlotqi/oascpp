@@ -7,7 +7,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <oascpp/schema/jsonschema/dialect.hpp>
+#include <oascpp/schema/dialect.hpp>
 #include <oascpp/value.hpp>
 #include <string_view>
 #include <vector>
