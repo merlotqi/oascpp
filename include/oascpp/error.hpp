@@ -71,6 +71,8 @@ enum class ErrorCode : std::uint16_t {
   response_status_unmatched,
   response_body_invalid,
   security_unsatisfied,
+
+  binding_not_registered,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(ErrorCode code) noexcept {
@@ -173,6 +175,8 @@ enum class ErrorCode : std::uint16_t {
       return "response_body_invalid";
     case ErrorCode::security_unsatisfied:
       return "security_unsatisfied";
+    case ErrorCode::binding_not_registered:
+      return "binding_not_registered";
   }
   return "unknown";
 }

@@ -188,7 +188,7 @@ OASCPP_TEST(schema_resolves_recursive_refs) {
   }));
 
   const auto valid = make_document(
-      Json::object({{"next", Json::object({{"next", Json::object()}})}}));
+      Json::object({{"next", Json::object({{"next", Json::object({})}})}}));
   OASCPP_CHECK(schema.validate(valid.root()).ok());
 
   const auto invalid = make_document(Json::object({{"next", Json(3)}}));

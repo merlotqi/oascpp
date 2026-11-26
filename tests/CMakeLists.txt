@@ -1,5 +1,7 @@
 add_executable(oascpp_tests
   main.cpp
+  binding_fixture.cpp
+  test_binding.cpp
   test_value.cpp
   test_json_pointer.cpp
   test_error.cpp

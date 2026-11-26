@@ -77,6 +77,31 @@ builder.append_member(root, "count", builder.make_integer(3));
 const oascpp::ParsedDocument document = builder.finish();
 ```
 
+### Binding validated JSON to C++ types
+
+Define the types in an application header. Register their fields in one
+`.cpp` file and call the registration function at startup.
+
+```cpp
+// user_bindings.cpp
+#include <oascpp/binding.hpp>
+#include "user.hpp"
+
+void register_user_bindings(oascpp::Bindings& bindings) {
+  using oascpp::field;
+  OASCPP_BIND(bindings, User::Address, field("postalCode", &User::Address::postcode));
+  OASCPP_BIND(bindings, User, field("home", &User::home), field("addresses", &User::addresses));
+}
+```
+
+Here `User` defines `Address home` and `std::vector<Address> addresses`, and
+`User::Address` defines `std::string postcode`. Share the populated registry
+with the code that calls `bindings.decode<User>(document.root())` after schema
+validation. The decoder returns a `User` or diagnostics with JSON Pointer paths.
+Vectors decode recursively. Optional members map missing fields and JSON null
+to `std::nullopt`. Bound types must be default-constructible and their mapped
+members writable.
+
 ## Layout
 
 | Header | Purpose |

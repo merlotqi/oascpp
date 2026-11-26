@@ -48,7 +48,7 @@ class Json {
     return value;
   }
 
-  [[nodiscard]] DocumentBuilder::NodeId build(DocumentBuilder& builder) const {
+  [[nodiscard]] oascpp::DocumentBuilder::NodeId build(oascpp::DocumentBuilder& builder) const {
     switch (kind_) {
       case Kind::null_value:
         return builder.make_null();
@@ -61,14 +61,14 @@ class Json {
       case Kind::string:
         return builder.make_string(string_);
       case Kind::array: {
-        const DocumentBuilder::NodeId id = builder.make_array();
+        const oascpp::DocumentBuilder::NodeId id = builder.make_array();
         for (const Json& item : items_) {
           static_cast<void>(builder.append(id, item.build(builder)));
         }
         return id;
       }
       case Kind::object: {
-        const DocumentBuilder::NodeId id = builder.make_object();
+        const oascpp::DocumentBuilder::NodeId id = builder.make_object();
         for (const auto& member : members_) {
           static_cast<void>(builder.append_member(id, member.first, member.second.build(builder)));
         }
