@@ -1,9 +1,8 @@
 #include <memory>
-#include <oascpp/schema/jsonschema.hpp>
+#include <oascpp/schema/schema.hpp>
 #include <utility>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 Result<Schema> Schema::compile(ParsedDocument document, const CompileOptions& options) {
   Schema schema;
@@ -25,8 +24,7 @@ const ParsedDocument& Schema::document() const noexcept { return *document_; }
 ValueView Schema::root() const noexcept { return document_->root(); }
 
 ValidationResult Schema::validate(ValueView instance, ValidationOptions options) const {
-  return jsonschema::validate(compiled_, instance, std::move(options));
+  return schema::validate(compiled_, instance, std::move(options));
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

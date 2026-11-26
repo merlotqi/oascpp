@@ -1,7 +1,6 @@
 #include <oascpp/schema/compiler.hpp>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 void SchemaCompiler::read_object_keywords(SchemaNode& node, ValueView view) {
   if (failed_) {
@@ -196,5 +195,4 @@ void SchemaCompiler::read_value_keywords(SchemaNode& node, ValueView view) {
   }
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

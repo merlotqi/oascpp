@@ -24,8 +24,7 @@
 #include <string_view>
 #include <unordered_map>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 struct CompileOptions {
   Dialect dialect = Dialect::draft2020_12;
@@ -115,5 +114,4 @@ class SchemaCompiler {
 [[nodiscard]] Result<CompiledSchema> compile_schema(const ParsedDocument& document, ValueView root,
                                                     const CompileOptions& options = CompileOptions());
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

@@ -12,8 +12,7 @@
 #include <string_view>
 #include <vector>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 using SchemaId = std::uint32_t;
 
@@ -238,5 +237,4 @@ class CompiledSchema {
   std::vector<char> text_;
 };
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

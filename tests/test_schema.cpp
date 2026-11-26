@@ -1,7 +1,7 @@
 #include <oascpp/schema/compiled_schema.hpp>
 #include <oascpp/schema/compiler.hpp>
 #include <oascpp/schema/dialect.hpp>
-#include <oascpp/schema/jsonschema.hpp>
+#include <oascpp/schema/schema.hpp>
 #include <oascpp/schema/validator.hpp>
 #include <string_view>
 
@@ -10,7 +10,7 @@
 
 namespace {
 
-namespace js = oascpp::jsonschema;
+namespace js = oascpp::schema;
 using oascpp::ErrorCode;
 using oascpp_test::Json;
 using oascpp_test::make_document;

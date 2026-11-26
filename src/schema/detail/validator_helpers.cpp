@@ -2,8 +2,7 @@
 
 #include "validation_run.hpp"
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 namespace detail {
 
 [[nodiscard]] SchemaId ValidationRun::find_property(const SchemaRun& run, std::string_view key) const {
@@ -75,5 +74,4 @@ void ValidationRun::add(ErrorPath* path, ErrorCode code, const char* message) {
 }
 
 }  // namespace detail
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

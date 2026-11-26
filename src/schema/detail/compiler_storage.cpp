@@ -1,7 +1,6 @@
 #include <oascpp/schema/compiler.hpp>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 [[nodiscard]] SchemaRun SchemaCompiler::compile_schema_run(ValueView array, const char* keyword) {
   SchemaRun run;
@@ -211,5 +210,4 @@ void SchemaCompiler::fail(ErrorCode code, std::string message) {
   error_message_ = std::move(message);
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

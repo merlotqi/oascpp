@@ -17,8 +17,8 @@ Pre-alpha (v0.2). Available today:
 - `oascpp/json_pointer.hpp` — RFC 6901 escaping helpers
 - `oascpp/error.hpp` — `ErrorCode`, `ErrorPath`, `ValidationError`, `ValidationResult`
 - `oascpp/result.hpp` — `Result<T>` for cold, single-error entry points
-- `oascpp/schema/jsonschema.hpp` — JSON Schema compiler and validator, plus the
-  owning `jsonschema::Schema` wrapper; components live in
+- `oascpp/schema/schema.hpp` — JSON Schema compiler and validator, plus the
+  owning `schema::Schema` wrapper; components live in
   `oascpp/schema/{dialect,compiled_schema,compiler,validator}.hpp`.
 - `oascpp/adapters/nlohmann_json.hpp` — optional nlohmann/json adapter
 
@@ -35,7 +35,7 @@ model, path matching, parameter serialization, request/response pipelines.
 - `$ref` is resolved at compile time and cycles are legal. External references
   are a compile error until a loader seam lands.
 - `pattern` and `format` are only interpreted when a matcher is installed in
-  `jsonschema::ValidationOptions`; the core stays free of `<regex>`.
+  `schema::ValidationOptions`; the core stays free of `<regex>`.
 - `propertyNames` validates names through a scratch document so there is exactly
   one interpretation path.
 

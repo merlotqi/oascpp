@@ -7,8 +7,7 @@
 #include <oascpp/value.hpp>
 #include <string_view>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 using PatternMatcher = std::function<bool(std::string_view, std::string_view)>;
 using FormatChecker = std::function<bool(std::string_view, std::string_view)>;
@@ -34,5 +33,4 @@ class Validator {
 [[nodiscard]] ValidationResult validate(const CompiledSchema& schema, ValueView instance,
                                         ValidationOptions options = ValidationOptions());
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

@@ -7,8 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 namespace detail {
 
 [[nodiscard]] std::size_t utf8_length(std::string_view text) noexcept;
@@ -45,5 +44,4 @@ class ValidationRun {
 };
 
 }  // namespace detail
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

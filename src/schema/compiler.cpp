@@ -1,8 +1,7 @@
 #include <oascpp/schema/compiler.hpp>
 #include <utility>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 Result<CompiledSchema> SchemaCompiler::compile(const ParsedDocument& document, ValueView root,
                                                const CompileOptions& options) {
@@ -106,5 +105,4 @@ Result<CompiledSchema> compile_schema(const ParsedDocument& document, ValueView 
   return SchemaCompiler::compile(document, root, options);
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

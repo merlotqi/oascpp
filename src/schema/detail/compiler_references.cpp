@@ -1,7 +1,6 @@
 #include <oascpp/schema/compiler.hpp>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 [[nodiscard]] SchemaId SchemaCompiler::resolve_reference(std::string_view ref) {
   if (ref.empty()) {
@@ -93,5 +92,4 @@ void SchemaCompiler::build_anchor_index() {
   }
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

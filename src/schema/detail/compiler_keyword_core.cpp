@@ -1,7 +1,6 @@
 #include <oascpp/schema/compiler.hpp>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 void SchemaCompiler::read_refs(SchemaNode& node, ValueView view) {
   if (failed_) {
@@ -162,5 +161,4 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
   }
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

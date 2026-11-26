@@ -1,7 +1,6 @@
 #include "validation_run.hpp"
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 namespace detail {
 
 bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, ErrorPath* path) {
@@ -103,5 +102,4 @@ bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, Err
 }
 
 }  // namespace detail
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

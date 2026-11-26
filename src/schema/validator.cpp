@@ -4,8 +4,7 @@
 
 #include "detail/validation_run.hpp"
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 namespace detail {
 
 std::size_t utf8_length(std::string_view text) noexcept {
@@ -134,5 +133,4 @@ ValidationResult validate(const CompiledSchema& schema, ValueView instance, Vali
   return validator.validate(instance);
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

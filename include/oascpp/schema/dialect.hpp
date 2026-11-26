@@ -10,8 +10,7 @@
 #include <oascpp/value.hpp>
 #include <string_view>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 enum class Dialect : std::uint8_t {
   draft2020_12 = 0,
@@ -114,5 +113,4 @@ struct DialectProfile {
   return profile;
 }
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema

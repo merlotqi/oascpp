@@ -10,8 +10,7 @@
 #include <oascpp/schema/dialect.hpp>
 #include <oascpp/schema/validator.hpp>
 
-namespace oascpp {
-namespace jsonschema {
+namespace oascpp::schema {
 
 // Owns the schema document together with its compiled graph, so a compiled
 // schema outlives the document it was built from.
@@ -35,5 +34,4 @@ class Schema {
   CompiledSchema compiled_;
 };
 
-}  // namespace jsonschema
-}  // namespace oascpp
+}  // namespace oascpp::schema
