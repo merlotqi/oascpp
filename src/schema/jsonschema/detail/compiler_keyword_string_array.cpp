@@ -1,11 +1,9 @@
-#pragma once
-
-// Internal inline keyword compilation routines.
+#include "oascpp/schema/jsonschema/compiler.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 
-inline void SchemaCompiler::read_string_keywords(SchemaNode& node, ValueView view) {
+void SchemaCompiler::read_string_keywords(SchemaNode& node, ValueView view) {
   if (failed_) {
     return;
   }
@@ -46,7 +44,7 @@ inline void SchemaCompiler::read_string_keywords(SchemaNode& node, ValueView vie
   }
 }
 
-inline void SchemaCompiler::read_array_keywords(SchemaNode& node, ValueView view) {
+void SchemaCompiler::read_array_keywords(SchemaNode& node, ValueView view) {
   if (failed_) {
     return;
   }

@@ -1,12 +1,10 @@
-#pragma once
-
-// Internal inline validation routines.
+#include "validation_run.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 namespace detail {
 
-inline bool ValidationRun::check_number(const SchemaNode& node, ValueView instance, ErrorPath* path) {
+bool ValidationRun::check_number(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   if (!instance.is_number()) {
     return true;
   }
@@ -35,7 +33,7 @@ inline bool ValidationRun::check_number(const SchemaNode& node, ValueView instan
   return ok;
 }
 
-inline bool ValidationRun::check_string(const SchemaNode& node, ValueView instance, ErrorPath* path) {
+bool ValidationRun::check_string(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   if (!instance.is_string()) {
     return true;
   }
@@ -71,7 +69,7 @@ inline bool ValidationRun::check_string(const SchemaNode& node, ValueView instan
   return ok;
 }
 
-inline bool ValidationRun::check_array(const SchemaNode& node, ValueView instance, ErrorPath* path) {
+bool ValidationRun::check_array(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   if (!instance.is_array()) {
     return true;
   }

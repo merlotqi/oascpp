@@ -1,11 +1,9 @@
-#pragma once
-
-// Internal inline definitions; include <oascpp/schema/jsonschema/compiler.hpp>.
+#include "oascpp/schema/jsonschema/compiler.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 
-[[nodiscard]] inline SchemaId SchemaCompiler::resolve_reference(std::string_view ref) {
+[[nodiscard]] SchemaId SchemaCompiler::resolve_reference(std::string_view ref) {
   if (ref.empty()) {
     fail(ErrorCode::unresolved_reference, "empty $ref");
     return no_schema;
@@ -48,7 +46,7 @@ namespace jsonschema {
   return compile_schema(ValueView(&document_, found->second));
 }
 
-[[nodiscard]] inline ValueView SchemaCompiler::descend(ValueView container, const std::string& token) {
+[[nodiscard]] ValueView SchemaCompiler::descend(ValueView container, const std::string& token) {
   if (container.is_object()) {
     return container.find(token);
   }
@@ -68,7 +66,7 @@ namespace jsonschema {
   return ValueView();
 }
 
-inline void SchemaCompiler::build_anchor_index() {
+void SchemaCompiler::build_anchor_index() {
   if (anchors_built_) {
     return;
   }

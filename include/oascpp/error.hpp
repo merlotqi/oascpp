@@ -195,46 +195,16 @@ class ErrorPath {
 
   ErrorPath() = default;
 
-  ErrorPath& push_key(std::string_view key) {
-    Token token;
-    if (!key.empty()) {
-      token.key.assign(key.data(), key.size());
-    }
-    tokens_.push_back(std::move(token));
-    return *this;
-  }
-
-  ErrorPath& push_index(std::size_t index) {
-    Token token;
-    token.index = index;
-    token.is_index = true;
-    tokens_.push_back(std::move(token));
-    return *this;
-  }
+  ErrorPath& push_key(std::string_view key);
+  ErrorPath& push_index(std::size_t index);
 
   // Walks that push a token before descending have to pop it again.
-  void pop_back() noexcept {
-    if (!tokens_.empty()) {
-      tokens_.pop_back();
-    }
-  }
+  void pop_back() noexcept;
 
-  [[nodiscard]] bool empty() const noexcept { return tokens_.empty(); }
-  [[nodiscard]] std::size_t depth() const noexcept { return tokens_.size(); }
-  [[nodiscard]] const std::vector<Token>& tokens() const noexcept { return tokens_; }
-
-  [[nodiscard]] std::string to_string() const {
-    std::string out;
-    for (const Token& token : tokens_) {
-      out.push_back('/');
-      if (token.is_index) {
-        out.append(std::to_string(token.index));
-      } else {
-        append_escaped_pointer_token(out, token.key);
-      }
-    }
-    return out;
-  }
+  [[nodiscard]] bool empty() const noexcept;
+  [[nodiscard]] std::size_t depth() const noexcept;
+  [[nodiscard]] const std::vector<Token>& tokens() const noexcept;
+  [[nodiscard]] std::string to_string() const;
 
  private:
   std::vector<Token> tokens_;
@@ -255,36 +225,22 @@ class ValidationResult {
  public:
   ValidationResult() = default;
 
-  [[nodiscard]] bool ok() const noexcept { return errors_.empty(); }
-  explicit operator bool() const noexcept { return ok(); }
+  [[nodiscard]] bool ok() const noexcept;
+  explicit operator bool() const noexcept;
 
-  [[nodiscard]] std::size_t error_count() const noexcept { return errors_.size(); }
-  [[nodiscard]] bool empty() const noexcept { return errors_.empty(); }
+  [[nodiscard]] std::size_t error_count() const noexcept;
+  [[nodiscard]] bool empty() const noexcept;
 
-  [[nodiscard]] const std::vector<ValidationError>& errors() const noexcept { return errors_; }
-
-  [[nodiscard]] const ValidationError* first_error() const noexcept {
-    return errors_.empty() ? nullptr : &errors_.front();
-  }
-
-  [[nodiscard]] ErrorCode first_error_code() const noexcept {
-    return errors_.empty() ? ErrorCode::none : errors_.front().code;
-  }
-
-  void add_error(ValidationError error) { errors_.push_back(std::move(error)); }
+  [[nodiscard]] const std::vector<ValidationError>& errors() const noexcept;
+  [[nodiscard]] const ValidationError* first_error() const noexcept;
+  [[nodiscard]] ErrorCode first_error_code() const noexcept;
+  void add_error(ValidationError error);
 
   // Hints the size of the error list up front, which keeps the common "valid
   // document, no errors" case allocation free.
-  void reserve(std::size_t count) { errors_.reserve(count); }
-
-
-  void add(ErrorCode code) {
-    ValidationError error;
-    error.code = code;
-    errors_.push_back(std::move(error));
-  }
-
-  void clear() noexcept { errors_.clear(); }
+  void reserve(std::size_t count);
+  void add(ErrorCode code);
+  void clear() noexcept;
 
  private:
   std::vector<ValidationError> errors_;

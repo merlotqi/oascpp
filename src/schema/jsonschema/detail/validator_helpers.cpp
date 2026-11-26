@@ -1,12 +1,11 @@
-#pragma once
-
-// Internal inline validation routines.
+#include "oascpp/document_builder.hpp"
+#include "validation_run.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 namespace detail {
 
-[[nodiscard]] inline SchemaId ValidationRun::find_property(const SchemaRun& run, std::string_view key) const {
+[[nodiscard]] SchemaId ValidationRun::find_property(const SchemaRun& run, std::string_view key) const {
   for (std::uint32_t index = 0; index < run.count; ++index) {
     const MemberEntry& entry = schema_.member_at(run, index);
     if (schema_.key(entry) == key) {
@@ -16,7 +15,7 @@ namespace detail {
   return no_schema;
 }
 
-inline bool ValidationRun::check_member(SchemaId id, ValueView value, std::string_view name, ErrorPath* path) {
+bool ValidationRun::check_member(SchemaId id, ValueView value, std::string_view name, ErrorPath* path) {
   if (path != nullptr) {
     path->push_key(name);
   }
@@ -27,7 +26,7 @@ inline bool ValidationRun::check_member(SchemaId id, ValueView value, std::strin
   return ok;
 }
 
-inline bool ValidationRun::check_element(SchemaId id, ValueView value, std::size_t index, ErrorPath* path) {
+bool ValidationRun::check_element(SchemaId id, ValueView value, std::size_t index, ErrorPath* path) {
   if (path != nullptr) {
     path->push_index(index);
   }
@@ -38,7 +37,7 @@ inline bool ValidationRun::check_element(SchemaId id, ValueView value, std::size
   return ok;
 }
 
-[[nodiscard]] inline ValueView ValidationRun::make_string_view(std::string_view text) {
+[[nodiscard]] ValueView ValidationRun::make_string_view(std::string_view text) {
   std::unique_ptr<ParsedDocument> document(new ParsedDocument());
   DocumentBuilder builder;
   static_cast<void>(builder.make_string(text));
@@ -47,7 +46,7 @@ inline bool ValidationRun::check_element(SchemaId id, ValueView value, std::size
   return scratch_.back()->root();
 }
 
-[[nodiscard]] inline bool ValidationRun::is_multiple_of(double value, double divisor) const {
+[[nodiscard]] bool ValidationRun::is_multiple_of(double value, double divisor) const {
   if (!(divisor > 0.0) || !std::isfinite(value)) {
     return false;
   }
@@ -60,7 +59,7 @@ inline bool ValidationRun::check_element(SchemaId id, ValueView value, std::size
   return std::fabs(quotient - nearest) <= tolerance;
 }
 
-inline void ValidationRun::add(ErrorPath* path, ErrorCode code, const char* message) {
+void ValidationRun::add(ErrorPath* path, ErrorCode code, const char* message) {
   if (path == nullptr) {
     return;
   }

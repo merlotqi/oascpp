@@ -6,8 +6,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <limits>
 #include <string_view>
 #include <vector>
 
@@ -80,23 +78,9 @@ struct Node {
   std::uint64_t scalar = 0;
 };
 
-[[nodiscard]] inline double decode_double(std::uint64_t bits) noexcept {
-  double value = 0.0;
-  std::memcpy(&value, &bits, sizeof(value));
-  return value;
-}
-
-[[nodiscard]] inline std::uint64_t encode_double(double value) noexcept {
-  std::uint64_t bits = 0;
-  std::memcpy(&bits, &value, sizeof(bits));
-  return bits;
-}
-
-[[nodiscard]] inline std::int64_t decode_signed(std::uint64_t bits) noexcept {
-  std::int64_t value = 0;
-  std::memcpy(&value, &bits, sizeof(value));
-  return value;
-}
+[[nodiscard]] double decode_double(std::uint64_t bits) noexcept;
+[[nodiscard]] std::uint64_t encode_double(double value) noexcept;
+[[nodiscard]] std::int64_t decode_signed(std::uint64_t bits) noexcept;
 
 }  // namespace detail
 
@@ -109,8 +93,8 @@ class ParsedDocument {
 
   [[nodiscard]] ValueView root() const noexcept;
 
-  [[nodiscard]] std::size_t node_count() const noexcept { return nodes_.size(); }
-  [[nodiscard]] bool empty() const noexcept { return nodes_.empty(); }
+  [[nodiscard]] std::size_t node_count() const noexcept;
+  [[nodiscard]] bool empty() const noexcept;
 
  private:
   friend class ValueView;
@@ -128,7 +112,7 @@ class ValueView {
   constexpr ValueView() noexcept = default;
   constexpr ValueView(const ParsedDocument* doc, std::uint32_t index) noexcept : doc_(doc), index_(index) {}
 
-  [[nodiscard]] bool valid() const noexcept { return doc_ != nullptr && index_ < doc_->nodes_.size(); }
+  [[nodiscard]] bool valid() const noexcept;
 
   // Arena index of this view. Stable for the lifetime of the document, so it is
   // usable as a memoisation key.
@@ -148,87 +132,32 @@ class ValueView {
 
   // Preconditions are documented rather than enforced: callers check kind()
   // first. Accessors on a mismatched kind return a zero value.
-  [[nodiscard]] bool as_boolean() const noexcept {
-    return valid() && node().kind == ValueKind::boolean && node().scalar != 0;
-  }
+  [[nodiscard]] bool as_boolean() const noexcept;
 
-  [[nodiscard]] std::int64_t as_integer() const noexcept { return as_number().as_signed; }
+  [[nodiscard]] std::int64_t as_integer() const noexcept;
 
-  [[nodiscard]] double as_double() const noexcept { return as_number().as_real; }
+  [[nodiscard]] double as_double() const noexcept;
 
   [[nodiscard]] NumberView as_number() const noexcept;
 
-  [[nodiscard]] std::string_view as_string() const noexcept {
-    if (!valid()) {
-      return {};
-    }
-    const detail::Node& n = node();
-    if (n.kind != ValueKind::string) {
-      return {};
-    }
-    return std::string_view(doc_->chars_.data() + n.text_off, n.text_len);
-  }
+  [[nodiscard]] std::string_view as_string() const noexcept;
 
   // Member name when this view was reached by iterating an object; empty at the
   // root and for array elements.
-  [[nodiscard]] std::string_view key() const noexcept {
-    if (!valid()) {
-      return {};
-    }
-    const detail::Node& n = node();
-    if (n.key_len == 0) {
-      return {};
-    }
-    return std::string_view(doc_->chars_.data() + n.key_off, n.key_len);
-  }
+  [[nodiscard]] std::string_view key() const noexcept;
 
-  [[nodiscard]] std::size_t size() const noexcept {
-    if (!valid()) {
-      return 0;
-    }
-    const detail::Node& n = node();
-    if (n.kind != ValueKind::array && n.kind != ValueKind::object) {
-      return 0;
-    }
-    return n.child_count;
-  }
+  [[nodiscard]] std::size_t size() const noexcept;
 
-  [[nodiscard]] bool empty() const noexcept { return size() == 0; }
+  [[nodiscard]] bool empty() const noexcept;
 
   // Array element. Returns an invalid view when out of range or not an array.
-  [[nodiscard]] ValueView at(std::size_t index) const noexcept {
-    if (!valid()) {
-      return {};
-    }
-    const detail::Node& n = node();
-    if (n.kind != ValueKind::array || index >= n.child_count) {
-      return {};
-    }
-    return child_at(index);
-  }
+  [[nodiscard]] ValueView at(std::size_t index) const noexcept;
 
   // Object member lookup. Linear today; becomes a sorted lookup once the arena
   // grows a key index. Returns an invalid view when absent.
-  [[nodiscard]] ValueView find(std::string_view key_name) const noexcept {
-    if (!valid()) {
-      return {};
-    }
-    const detail::Node& n = node();
-    if (n.kind != ValueKind::object) {
-      return {};
-    }
-    for (std::uint32_t i = 0; i < n.child_count; ++i) {
-      const std::uint32_t child = doc_->children_[static_cast<std::size_t>(n.child_off) + i];
-      const detail::Node& candidate = doc_->nodes_[child];
-      const std::string_view stored(doc_->chars_.data() + candidate.key_off, candidate.key_len);
-      if (stored == key_name) {
-        return ValueView(doc_, child);
-      }
-    }
-    return {};
-  }
+  [[nodiscard]] ValueView find(std::string_view key_name) const noexcept;
 
-  [[nodiscard]] bool contains(std::string_view key_name) const noexcept { return find(key_name).valid(); }
+  [[nodiscard]] bool contains(std::string_view key_name) const noexcept;
 
   class Iterator;
 
@@ -237,18 +166,12 @@ class ValueView {
   [[nodiscard]] Iterator begin() const noexcept;
   [[nodiscard]] Iterator end() const noexcept;
 
-  friend bool operator==(const ValueView& lhs, const ValueView& rhs) noexcept {
-    return lhs.doc_ == rhs.doc_ && lhs.index_ == rhs.index_;
-  }
-  friend bool operator!=(const ValueView& lhs, const ValueView& rhs) noexcept { return !(lhs == rhs); }
+  friend bool operator==(const ValueView& lhs, const ValueView& rhs) noexcept;
+  friend bool operator!=(const ValueView& lhs, const ValueView& rhs) noexcept;
 
  private:
-  [[nodiscard]] const detail::Node& node() const noexcept { return doc_->nodes_[index_]; }
-
-  [[nodiscard]] ValueView child_at(std::size_t position) const noexcept {
-    const detail::Node& n = node();
-    return ValueView(doc_, doc_->children_[static_cast<std::size_t>(n.child_off) + position]);
-  }
+  [[nodiscard]] const detail::Node& node() const noexcept;
+  [[nodiscard]] ValueView child_at(std::size_t position) const noexcept;
 
   const ParsedDocument* doc_ = nullptr;
   std::uint32_t index_ = 0;
@@ -278,128 +201,9 @@ class ValueView::Iterator {
   std::size_t position_ = 0;
 };
 
-inline ValueView::Iterator ValueView::begin() const noexcept {
-  if (!is_container()) {
-    return Iterator();
-  }
-  return Iterator(*this, 0);
-}
-
-inline ValueView::Iterator ValueView::end() const noexcept {
-  if (!is_container()) {
-    return Iterator();
-  }
-  return Iterator(*this, size());
-}
-
-inline NumberView ValueView::as_number() const noexcept {
-  NumberView out;
-  if (!valid()) {
-    return out;
-  }
-  const detail::Node& n = node();
-  switch (n.kind) {
-    case ValueKind::integer: {
-      out.is_integer = true;
-      out.is_unsigned = (n.flags & detail::node_flag_unsigned) != 0;
-      out.as_unsigned = n.scalar;
-      const bool fits_signed = n.scalar <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
-      out.as_signed =
-          out.is_unsigned ? (fits_signed ? static_cast<std::int64_t>(n.scalar) : 0) : detail::decode_signed(n.scalar);
-      out.as_real = out.is_unsigned ? static_cast<double>(n.scalar) : static_cast<double>(out.as_signed);
-      break;
-    }
-    case ValueKind::real:
-      out.is_integer = false;
-      out.is_unsigned = false;
-      out.as_real = detail::decode_double(n.scalar);
-      break;
-    default:
-      break;
-  }
-  return out;
-}
-
-inline ValueView ParsedDocument::root() const noexcept {
-  if (nodes_.empty()) {
-    return ValueView();
-  }
-  return ValueView(this, 0);
-}
-
 // Structural equality with JSON semantics, which differ from C++ equality in one
 // important way: numbers compare numerically across kinds, so 1 == 1.0. This is
 // what enum, const and uniqueItems need.
-[[nodiscard]] inline bool deep_equal(const ValueView& lhs, const ValueView& rhs) noexcept {
-  const bool lhs_valid = lhs.valid();
-  const bool rhs_valid = rhs.valid();
-  if (!lhs_valid || !rhs_valid) {
-    return lhs_valid == rhs_valid;
-  }
-
-  const ValueKind lhs_kind = lhs.kind();
-  const ValueKind rhs_kind = rhs.kind();
-  const bool lhs_number = lhs_kind == ValueKind::integer || lhs_kind == ValueKind::real;
-  const bool rhs_number = rhs_kind == ValueKind::integer || rhs_kind == ValueKind::real;
-
-  if (lhs_number || rhs_number) {
-    if (!(lhs_number && rhs_number)) {
-      return false;
-    }
-    const NumberView a = lhs.as_number();
-    const NumberView b = rhs.as_number();
-    if (a.is_integer && b.is_integer) {
-      if (a.is_unsigned && b.is_unsigned) {
-        return a.as_unsigned == b.as_unsigned;
-      }
-      if (!a.is_unsigned && !b.is_unsigned) {
-        return a.as_signed == b.as_signed;
-      }
-      const NumberView& wide = a.is_unsigned ? a : b;
-      const NumberView& narrow = a.is_unsigned ? b : a;
-      return narrow.as_signed >= 0 &&
-             wide.as_unsigned == static_cast<std::uint64_t>(narrow.as_signed);
-    }
-    return a.as_real == b.as_real;
-  }
-
-  if (lhs_kind != rhs_kind) {
-    return false;
-  }
-
-  switch (lhs_kind) {
-    case ValueKind::null_value:
-      return true;
-    case ValueKind::boolean:
-      return lhs.as_boolean() == rhs.as_boolean();
-    case ValueKind::string:
-      return lhs.as_string() == rhs.as_string();
-    case ValueKind::array: {
-      if (lhs.size() != rhs.size()) {
-        return false;
-      }
-      for (std::size_t index = 0; index < lhs.size(); ++index) {
-        if (!deep_equal(lhs.at(index), rhs.at(index))) {
-          return false;
-        }
-      }
-      return true;
-    }
-    case ValueKind::object: {
-      if (lhs.size() != rhs.size()) {
-        return false;
-      }
-      for (const ValueView member : lhs) {
-        const ValueView other = rhs.find(member.key());
-        if (!other.valid() || !deep_equal(member, other)) {
-          return false;
-        }
-      }
-      return true;
-    }
-    default:
-      return false;
-  }
-}
+[[nodiscard]] bool deep_equal(const ValueView& lhs, const ValueView& rhs) noexcept;
 
 }  // namespace oascpp

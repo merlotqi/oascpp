@@ -1,12 +1,10 @@
-#pragma once
-
-// Internal inline validation routines.
+#include "validation_run.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 namespace detail {
 
-inline bool ValidationRun::check_composition(const SchemaNode& node, ValueView instance, ErrorPath* path) {
+bool ValidationRun::check_composition(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   bool ok = true;
   if (has_keyword(node.present, Keyword::all_of)) {
     for (std::uint32_t index = 0; index < node.all_of.count; ++index) {
@@ -57,7 +55,7 @@ inline bool ValidationRun::check_composition(const SchemaNode& node, ValueView i
   return ok;
 }
 
-inline bool ValidationRun::check_values(const SchemaNode& node, ValueView instance, ErrorPath* path) {
+bool ValidationRun::check_values(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   bool ok = true;
   if (has_keyword(node.present, Keyword::enum_values)) {
     bool found = false;

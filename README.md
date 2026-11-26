@@ -1,6 +1,7 @@
 # oascpp
 
-Header-only, template-friendly OpenAPI 3.0 / 3.1 validation for modern C++17.
+Static C++17 library for OpenAPI 3.0 / 3.1 validation. Template-based bindings
+and optional backend adapters remain header-based.
 
 The goal is a library that validates the *document* and the *exchanges* an OpenAPI
 description promises: request parameters and bodies, response payloads, content
@@ -42,6 +43,7 @@ model, path matching, parameter serialization, request/response pipelines.
 
 - a C++17 compiler
 - CMake 3.16 or newer to build the tests
+- link applications against the exported `oascpp::oascpp` static-library target
 - optionally [nlohmann/json](https://github.com/nlohmann/json); without it the
   adapter header compiles to nothing
 
@@ -52,6 +54,10 @@ cmake -S . -B build -DOASCPP_BUILD_TESTS=ON
 cmake --build build
 ctest --test-dir build --output-on-failure
 ```
+
+The build produces a static `oascpp` library. Installed CMake consumers link
+against `oascpp::oascpp`, which also provides the public include directory and
+C++17 requirement.
 
 ## Usage
 

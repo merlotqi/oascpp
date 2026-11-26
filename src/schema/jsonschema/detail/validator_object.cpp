@@ -1,12 +1,10 @@
-#pragma once
-
-// Internal inline validation routines.
+#include "validation_run.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 namespace detail {
 
-inline bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, ErrorPath* path) {
+bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   if (!instance.is_object()) {
     return true;
   }

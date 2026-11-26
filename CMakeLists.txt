@@ -2,16 +2,32 @@ cmake_minimum_required(VERSION 3.16)
 
 project(oascpp
   VERSION 0.1.0
-  DESCRIPTION "Header-only OpenAPI 3.0/3.1 validation library for modern C++"
+  DESCRIPTION "OpenAPI 3.0/3.1 validation library for modern C++"
   LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
-add_library(oascpp INTERFACE)
+add_library(oascpp STATIC
+  src/document_builder.cpp
+  src/error.cpp
+  src/json_pointer.cpp
+  src/value.cpp
+  src/schema/jsonschema/compiler.cpp
+  src/schema/jsonschema/detail/compiler_keyword_core.cpp
+  src/schema/jsonschema/detail/compiler_keyword_object_composition.cpp
+  src/schema/jsonschema/detail/compiler_keyword_string_array.cpp
+  src/schema/jsonschema/detail/compiler_references.cpp
+  src/schema/jsonschema/detail/compiler_storage.cpp
+  src/schema/jsonschema/validator.cpp
+  src/schema/jsonschema/detail/validator_composition.cpp
+  src/schema/jsonschema/detail/validator_helpers.cpp
+  src/schema/jsonschema/detail/validator_number_string_array.cpp
+  src/schema/jsonschema/detail/validator_object.cpp
+  src/schema/jsonschema/schema.cpp)
 add_library(oascpp::oascpp ALIAS oascpp)
 
-target_compile_features(oascpp INTERFACE cxx_std_17)
-target_include_directories(oascpp INTERFACE
+target_compile_features(oascpp PUBLIC cxx_std_17)
+target_include_directories(oascpp PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
@@ -24,7 +40,8 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
-install(TARGETS oascpp EXPORT oascppTargets)
+install(TARGETS oascpp EXPORT oascppTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(EXPORT oascppTargets

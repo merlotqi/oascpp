@@ -1,11 +1,9 @@
-#pragma once
-
-// Internal inline definitions; include <oascpp/schema/jsonschema/compiler.hpp>.
+#include "oascpp/schema/jsonschema/compiler.hpp"
 
 namespace oascpp {
 namespace jsonschema {
 
-[[nodiscard]] inline SchemaRun SchemaCompiler::compile_schema_run(ValueView array, const char* keyword) {
+[[nodiscard]] SchemaRun SchemaCompiler::compile_schema_run(ValueView array, const char* keyword) {
   SchemaRun run;
   if (failed_) {
     return run;
@@ -29,7 +27,7 @@ namespace jsonschema {
   return run;
 }
 
-[[nodiscard]] inline SchemaRun SchemaCompiler::compile_name_run(ValueView array, const char* keyword) {
+[[nodiscard]] SchemaRun SchemaCompiler::compile_name_run(ValueView array, const char* keyword) {
   SchemaRun run;
   if (failed_) {
     return run;
@@ -55,7 +53,7 @@ namespace jsonschema {
   return run;
 }
 
-[[nodiscard]] inline SchemaRun SchemaCompiler::compile_member_map(ValueView object, const char* keyword) {
+[[nodiscard]] SchemaRun SchemaCompiler::compile_member_map(ValueView object, const char* keyword) {
   SchemaRun run;
   if (failed_) {
     return run;
@@ -80,7 +78,7 @@ namespace jsonschema {
   return run;
 }
 
-[[nodiscard]] inline SchemaRun SchemaCompiler::compile_dependent_names(ValueView object, const char* keyword) {
+[[nodiscard]] SchemaRun SchemaCompiler::compile_dependent_names(ValueView object, const char* keyword) {
   SchemaRun run;
   if (failed_) {
     return run;
@@ -106,7 +104,7 @@ namespace jsonschema {
   return run;
 }
 
-[[nodiscard]] inline SchemaRun SchemaCompiler::compile_dependent_schemas(ValueView object, const char* keyword) {
+[[nodiscard]] SchemaRun SchemaCompiler::compile_dependent_schemas(ValueView object, const char* keyword) {
   SchemaRun run;
   if (failed_) {
     return run;
@@ -134,13 +132,13 @@ namespace jsonschema {
   return run;
 }
 
-inline void SchemaCompiler::append_text(std::uint32_t& off, std::uint32_t& len, std::string_view value) {
+void SchemaCompiler::append_text(std::uint32_t& off, std::uint32_t& len, std::string_view value) {
   off = static_cast<std::uint32_t>(schema_.text_.size());
   len = static_cast<std::uint32_t>(value.size());
   schema_.text_.insert(schema_.text_.end(), value.begin(), value.end());
 }
 
-[[nodiscard]] inline bool SchemaCompiler::read_number(ValueView view, const char* keyword, double& out_value) {
+[[nodiscard]] bool SchemaCompiler::read_number(ValueView view, const char* keyword, double& out_value) {
   if (!view.is_number()) {
     fail(ErrorCode::schema_invalid, std::string(keyword) + " must be a number");
     return false;
@@ -149,7 +147,7 @@ inline void SchemaCompiler::append_text(std::uint32_t& off, std::uint32_t& len, 
   return true;
 }
 
-[[nodiscard]] inline bool SchemaCompiler::read_unsigned(ValueView view, const char* keyword, std::uint32_t& out_value) {
+[[nodiscard]] bool SchemaCompiler::read_unsigned(ValueView view, const char* keyword, std::uint32_t& out_value) {
   if (!view.is_integer()) {
     fail(ErrorCode::schema_invalid, std::string(keyword) + " must be a non-negative integer");
     return false;
@@ -171,7 +169,7 @@ inline void SchemaCompiler::append_text(std::uint32_t& off, std::uint32_t& len, 
   return true;
 }
 
-[[nodiscard]] inline bool SchemaCompiler::type_bit(std::string_view name, std::uint8_t& out_bit) {
+[[nodiscard]] bool SchemaCompiler::type_bit(std::string_view name, std::uint8_t& out_bit) {
   if (name == "null") {
     out_bit = type_bit_null;
     return true;
@@ -204,7 +202,7 @@ inline void SchemaCompiler::append_text(std::uint32_t& off, std::uint32_t& len, 
   return false;
 }
 
-inline void SchemaCompiler::fail(ErrorCode code, std::string message) {
+void SchemaCompiler::fail(ErrorCode code, std::string message) {
   if (failed_) {
     return;
   }

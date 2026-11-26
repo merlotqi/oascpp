@@ -24,25 +24,13 @@ class Schema {
   // Takes the document by value: the compiled graph borrows it, so it has to be
   // moved onto storage that outlives the graph.
   [[nodiscard]] static Result<Schema> compile(ParsedDocument document,
-                                              const CompileOptions& options = CompileOptions()) {
-    Schema schema;
-    schema.document_ = std::make_shared<ParsedDocument>(std::move(document));
-    Result<CompiledSchema> compiled = SchemaCompiler::compile(*schema.document_, schema.document_->root(), options);
-    if (!compiled) {
-      return compiled.error();
-    }
-    schema.compiled_ = std::move(compiled.value());
-    return schema;
-  }
+                                              const CompileOptions& options = CompileOptions());
 
-  [[nodiscard]] bool valid() const noexcept { return compiled_.valid(); }
-  [[nodiscard]] const CompiledSchema& compiled() const noexcept { return compiled_; }
-  [[nodiscard]] const ParsedDocument& document() const noexcept { return *document_; }
-  [[nodiscard]] ValueView root() const noexcept { return document_->root(); }
-
-  [[nodiscard]] ValidationResult validate(ValueView instance, ValidationOptions options = ValidationOptions()) const {
-    return jsonschema::validate(compiled_, instance, std::move(options));
-  }
+  [[nodiscard]] bool valid() const noexcept;
+  [[nodiscard]] const CompiledSchema& compiled() const noexcept;
+  [[nodiscard]] const ParsedDocument& document() const noexcept;
+  [[nodiscard]] ValueView root() const noexcept;
+  [[nodiscard]] ValidationResult validate(ValueView instance, ValidationOptions options = ValidationOptions()) const;
 
  private:
   std::shared_ptr<ParsedDocument> document_;
