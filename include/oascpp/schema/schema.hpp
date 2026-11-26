@@ -25,6 +25,7 @@ class Schema {
 
   [[nodiscard]] bool valid() const noexcept;
   [[nodiscard]] const CompiledSchema& compiled() const noexcept;
+  // Invalid default-constructed schemas expose an empty document and invalid root.
   [[nodiscard]] const ParsedDocument& document() const noexcept;
   [[nodiscard]] ValueView root() const noexcept;
   [[nodiscard]] ValidationResult validate(ValueView instance, ValidationOptions options = ValidationOptions()) const;

@@ -6,6 +6,25 @@
 
 namespace oascpp::schema {
 namespace detail {
+namespace {
+
+ErrorPath make_schema_path(std::string_view pointer) {
+  ErrorPath path;
+  std::size_t position = 0;
+  while (position < pointer.size()) {
+    if (pointer[position] != '/') {
+      break;
+    }
+    const std::size_t start = position + 1;
+    const std::size_t end = pointer.find('/', start);
+    path.push_key(oascpp::unescape_pointer_token(
+        pointer.substr(start, end == std::string_view::npos ? pointer.size() - start : end - start)));
+    position = end == std::string_view::npos ? pointer.size() : end;
+  }
+  return path;
+}
+
+}  // namespace
 
 std::size_t utf8_length(std::string_view text) noexcept {
   std::size_t count = 0;
@@ -22,6 +41,13 @@ ValidationRun::ValidationRun(const CompiledSchema& schema, const ValidationOptio
     : schema_(schema), options_(options) {}
 
 ValidationResult ValidationRun::execute(ValueView instance) {
+  if (!schema_.valid()) {
+    ValidationError error;
+    error.code = ErrorCode::schema_invalid;
+    error.message = "compiled schema is invalid";
+    result_.add_error(std::move(error));
+    return std::move(result_);
+  }
   if (!instance.valid()) {
     ValidationError error;
     error.code = ErrorCode::invalid_value;
@@ -38,8 +64,15 @@ bool ValidationRun::check(SchemaId id, ValueView instance, ErrorPath* path) {
   if (id == no_schema || !instance.valid()) {
     return true;
   }
+  if (id >= schema_.size()) {
+    add(path, ErrorCode::schema_invalid, "compiled schema reference is out of range");
+    return false;
+  }
+  const SchemaNode& node = schema_.node(id);
+  schema_paths_.push_back(make_schema_path(schema_.schema_path(node)));
   if (depth_ >= options_.max_depth) {
     add(path, ErrorCode::schema_invalid, "validation nesting is too deep");
+    schema_paths_.pop_back();
     return false;
   }
 
@@ -47,13 +80,13 @@ bool ValidationRun::check(SchemaId id, ValueView instance, ErrorPath* path) {
   const std::pair<SchemaId, std::uint32_t> visit(id, instance.index());
   for (const auto& active : active_) {
     if (active == visit) {
+      schema_paths_.pop_back();
       return true;
     }
   }
   active_.push_back(visit);
   ++depth_;
 
-  const SchemaNode& node = schema_.node(id);
   bool ok = true;
   if ((node.flags & schema_flag_false) != 0) {
     add(path, ErrorCode::invalid_value, "schema is false");
@@ -64,6 +97,7 @@ bool ValidationRun::check(SchemaId id, ValueView instance, ErrorPath* path) {
 
   --depth_;
   active_.pop_back();
+  schema_paths_.pop_back();
   return ok;
 }
 
@@ -76,7 +110,7 @@ bool ValidationRun::check_node(const SchemaNode& node, ValueView instance, Error
     }
   }
   if (has_keyword(node.present, Keyword::dynamic_ref)) {
-    ok = check(node.dynamic_ref, instance, path) && ok;
+    result_.mark_incomplete();
   }
 
   if (node.types != 0 && !type_matches(node.types, instance)) {

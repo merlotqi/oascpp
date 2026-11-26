@@ -45,6 +45,10 @@ void SchemaCompiler::read_type(SchemaNode& node, ValueView view) {
         return;
       }
     } else if (type.is_array()) {
+      if (!schema_.profile_.type_may_be_array) {
+        fail(ErrorCode::schema_invalid, "type arrays are not supported by this dialect");
+        return;
+      }
       if (type.empty()) {
         fail(ErrorCode::schema_invalid, "type array must not be empty");
         return;
@@ -70,7 +74,7 @@ void SchemaCompiler::read_type(SchemaNode& node, ValueView view) {
 
   // OpenAPI 3.0 spelling of "this may also be null".
   const ValueView nullable = view.find("nullable");
-  if (nullable.valid() && nullable.is_boolean() && nullable.as_boolean()) {
+  if (nullable.valid() && schema_.profile_.allows_nullable && nullable.is_boolean() && nullable.as_boolean()) {
     if (node.types != 0) {
       node.types |= type_bit_null;
     }
@@ -83,11 +87,11 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
   }
   const ValueView multiple_of = view.find("multipleOf");
   if (multiple_of.valid()) {
-    double value = 0.0;
+    NumberView value;
     if (!read_number(multiple_of, "multipleOf", value)) {
       return;
     }
-    if (!(value > 0.0)) {
+    if (oascpp::detail::compare_numbers(value, NumberView{}) != oascpp::detail::NumberOrder::greater) {
       fail(ErrorCode::schema_invalid, "multipleOf must be greater than zero");
       return;
     }
@@ -97,7 +101,7 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
 
   const ValueView minimum = view.find("minimum");
   if (minimum.valid()) {
-    double value = 0.0;
+    NumberView value;
     if (!read_number(minimum, "minimum", value)) {
       return;
     }
@@ -108,6 +112,10 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
   const ValueView exclusive_minimum = view.find("exclusiveMinimum");
   if (exclusive_minimum.valid()) {
     if (exclusive_minimum.is_boolean()) {
+      if (!schema_.profile_.exclusive_is_boolean) {
+        fail(ErrorCode::schema_invalid, "exclusiveMinimum must be a number in this dialect");
+        return;
+      }
       // draft4 / OpenAPI 3.0 spelling.
       if (exclusive_minimum.as_boolean()) {
         if (!has_keyword(node.present, Keyword::minimum)) {
@@ -119,7 +127,11 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
         node.present &= ~keyword_bit(Keyword::minimum);
       }
     } else {
-      double value = 0.0;
+      if (schema_.profile_.exclusive_is_boolean) {
+        fail(ErrorCode::schema_invalid, "exclusiveMinimum must be a boolean in this dialect");
+        return;
+      }
+      NumberView value;
       if (!read_number(exclusive_minimum, "exclusiveMinimum", value)) {
         return;
       }
@@ -130,7 +142,7 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
 
   const ValueView maximum = view.find("maximum");
   if (maximum.valid()) {
-    double value = 0.0;
+    NumberView value;
     if (!read_number(maximum, "maximum", value)) {
       return;
     }
@@ -141,6 +153,10 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
   const ValueView exclusive_maximum = view.find("exclusiveMaximum");
   if (exclusive_maximum.valid()) {
     if (exclusive_maximum.is_boolean()) {
+      if (!schema_.profile_.exclusive_is_boolean) {
+        fail(ErrorCode::schema_invalid, "exclusiveMaximum must be a number in this dialect");
+        return;
+      }
       if (exclusive_maximum.as_boolean()) {
         if (!has_keyword(node.present, Keyword::maximum)) {
           fail(ErrorCode::schema_invalid, "exclusiveMaximum: true requires maximum");
@@ -151,7 +167,11 @@ void SchemaCompiler::read_numeric(SchemaNode& node, ValueView view) {
         node.present &= ~keyword_bit(Keyword::maximum);
       }
     } else {
-      double value = 0.0;
+      if (schema_.profile_.exclusive_is_boolean) {
+        fail(ErrorCode::schema_invalid, "exclusiveMaximum must be a boolean in this dialect");
+        return;
+      }
+      NumberView value;
       if (!read_number(exclusive_maximum, "exclusiveMaximum", value)) {
         return;
       }

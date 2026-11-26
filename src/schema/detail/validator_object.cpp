@@ -7,6 +7,9 @@ bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, Err
   if (!instance.is_object()) {
     return true;
   }
+  if (has_keyword(node.present, Keyword::unevaluated_properties)) {
+    result_.mark_incomplete();
+  }
   const std::size_t size = instance.size();
   bool ok = true;
   if (has_keyword(node.present, Keyword::min_properties) && size < node.min_properties) {
@@ -35,8 +38,12 @@ bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, Err
   }
 
   const bool has_properties = has_keyword(node.present, Keyword::properties);
-  const bool has_pattern_properties =
-      has_keyword(node.present, Keyword::pattern_properties) && options_.pattern_matcher;
+  const bool has_pattern_keywords = has_keyword(node.present, Keyword::pattern_properties);
+  const bool has_pattern_properties = has_pattern_keywords && options_.pattern_matcher;
+  const bool patterns_unavailable = has_pattern_keywords && !options_.pattern_matcher && size != 0;
+  if (patterns_unavailable) {
+    result_.mark_incomplete();
+  }
   for (const ValueView member : instance) {
     const std::string_view name = member.key();
     bool covered = false;
@@ -56,7 +63,7 @@ bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, Err
         }
       }
     }
-    if (!covered && has_keyword(node.present, Keyword::additional_properties)) {
+    if (!covered && !patterns_unavailable && has_keyword(node.present, Keyword::additional_properties)) {
       ok = check_member(node.additional_properties, member, name, path) && ok;
     }
   }
@@ -97,7 +104,6 @@ bool ValidationRun::check_object(const SchemaNode& node, ValueView instance, Err
     }
   }
 
-  // unevaluatedProperties needs annotation tracking and is not interpreted yet.
   return ok;
 }
 

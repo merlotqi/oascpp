@@ -56,6 +56,7 @@ OASCPP_TEST(schema_reports_nested_type_mismatch) {
   OASCPP_CHECK(!result.ok());
   OASCPP_CHECK(result.first_error_code() == ErrorCode::type_mismatch);
   OASCPP_CHECK(result.first_error()->instance_path.to_string() == "/age");
+  OASCPP_CHECK(result.first_error()->schema_path.to_string() == "/properties/age/type");
 }
 
 OASCPP_TEST(schema_integer_type_accepts_integral_real) {
@@ -87,6 +88,97 @@ OASCPP_TEST(schema_checks_numeric_bounds) {
 
   const auto not_a_multiple = make_document(Json(7));
   OASCPP_CHECK(schema.validate(not_a_multiple.root()).first_error_code() == ErrorCode::numeric_multiple_of);
+}
+
+OASCPP_TEST(schema_compares_large_integer_bounds_exactly) {
+  const js::Schema schema = compile_or_fail(Json::object({{"minimum", Json(9007199254740993LL)}}));
+  const auto below = make_document(Json(9007199254740992LL));
+  const auto equal = make_document(Json(9007199254740993LL));
+
+  OASCPP_CHECK(schema.validate(below.root()).first_error_code() == ErrorCode::numeric_minimum);
+  OASCPP_CHECK(schema.validate(equal.root()).ok());
+}
+
+OASCPP_TEST(schema_multiple_of_uses_exact_integer_arithmetic_and_tight_real_tolerance) {
+  const js::Schema integer_schema = compile_or_fail(Json::object({{"multipleOf", 3}}));
+  const auto large_non_multiple = make_document(Json(9007199254740994LL));
+  OASCPP_CHECK(integer_schema.validate(large_non_multiple.root()).first_error_code() == ErrorCode::numeric_multiple_of);
+
+  const js::Schema real_schema = compile_or_fail(Json::object({{"multipleOf", 1.0}}));
+  const auto fractional = make_document(Json(1000000000.5));
+  OASCPP_CHECK(real_schema.validate(fractional.root()).first_error_code() == ErrorCode::numeric_multiple_of);
+
+  const js::Schema decimal_schema = compile_or_fail(Json::object({{"multipleOf", 0.1}}));
+  const auto decimal_multiple = make_document(Json(0.3));
+  OASCPP_CHECK(decimal_schema.validate(decimal_multiple.root()).ok());
+}
+
+OASCPP_TEST(schema_accepts_integral_real_and_wide_unsigned_limits) {
+  const js::Schema schema = compile_or_fail(Json::object({
+      {"minItems", 1.0},
+      {"maxItems", Json(4294967296LL)},
+  }));
+  const auto instance = make_document(Json::array({1}));
+  OASCPP_CHECK(schema.validate(instance.root()).ok());
+}
+
+OASCPP_TEST(schema_draft_2020_rejects_openapi_30_and_legacy_keyword_shapes) {
+  const auto nullable = js::Schema::compile(make_document(Json::object({
+      {"type", "string"},
+      {"nullable", true},
+  })));
+  OASCPP_CHECK(nullable.has_value());
+  if (nullable) {
+    const auto null_instance = make_document(Json(nullptr));
+    OASCPP_CHECK(!nullable.value().validate(null_instance.root()).ok());
+  }
+
+  const auto boolean_exclusive = js::Schema::compile(make_document(Json::object({{"exclusiveMinimum", true}})));
+  OASCPP_CHECK(!boolean_exclusive.has_value());
+
+  const auto tuple_items = js::Schema::compile(make_document(Json::object({
+      {"items", Json::array({Json::object({{"type", "string"}})})},
+  })));
+  OASCPP_CHECK(!tuple_items.has_value());
+
+  js::CompileOptions openapi_options;
+  openapi_options.dialect = js::Dialect::openapi31;
+  const auto openapi_schema = js::Schema::compile(make_document(Json::object({
+                                                      {"type", Json::array({"string", "null"})},
+                                                      {"nullable", true},
+                                                  })),
+                                                  openapi_options);
+  OASCPP_CHECK(openapi_schema.has_value());
+  if (openapi_schema) {
+    const auto null_instance = make_document(Json(nullptr));
+    OASCPP_CHECK(openapi_schema.value().validate(null_instance.root()).ok());
+  }
+}
+
+OASCPP_TEST(schema_respects_zero_error_limit_without_reporting_success) {
+  const js::Schema schema = compile_or_fail(Json::object({{"type", "string"}}));
+  const auto instance = make_document(Json(42));
+  js::ValidationOptions options;
+  options.max_errors = 0;
+  const auto result = schema.validate(instance.root(), options);
+
+  OASCPP_CHECK(!result.ok());
+  OASCPP_CHECK(result.complete());
+  OASCPP_CHECK(result.error_count() == 0);
+}
+
+OASCPP_TEST(schema_rejects_empty_enum_and_invalid_compiled_schema) {
+  const auto empty_enum = js::Schema::compile(make_document(Json::object({{"enum", Json::array({})}})));
+  OASCPP_CHECK(!empty_enum.has_value());
+
+  const js::Schema invalid;
+  OASCPP_CHECK(invalid.document().empty());
+  OASCPP_CHECK(!invalid.root().valid());
+  OASCPP_CHECK(invalid.compiled().document().empty());
+  const auto instance = make_document(Json(1));
+  const auto result = invalid.validate(instance.root());
+  OASCPP_CHECK(!result.ok());
+  OASCPP_CHECK(result.first_error_code() == ErrorCode::schema_invalid);
 }
 
 OASCPP_TEST(schema_counts_utf8_code_points) {
@@ -200,8 +292,10 @@ OASCPP_TEST(schema_pattern_needs_a_matcher) {
 
   const js::Schema without_matcher = compile_or_fail(pattern_schema);
   const auto instance = make_document(Json("bbb"));
-  // The keyword is preserved but not interpreted without an engine.
-  OASCPP_CHECK(without_matcher.validate(instance.root()).ok());
+  const auto incomplete = without_matcher.validate(instance.root());
+  OASCPP_CHECK(!incomplete.ok());
+  OASCPP_CHECK(!incomplete.complete());
+  OASCPP_CHECK(incomplete.empty());
 
   js::ValidationOptions options;
   options.pattern_matcher = [](std::string_view pattern, std::string_view candidate) {
@@ -210,6 +304,56 @@ OASCPP_TEST(schema_pattern_needs_a_matcher) {
   };
   const auto with_matcher = without_matcher.validate(instance.root(), options);
   OASCPP_CHECK(with_matcher.first_error_code() == ErrorCode::string_pattern);
+  OASCPP_CHECK(with_matcher.complete());
+}
+
+OASCPP_TEST(schema_marks_unavailable_pattern_properties_incomplete) {
+  const js::Schema schema = compile_or_fail(Json::object({
+      {"patternProperties", Json::object({{"^x", Json(true)}})},
+      {"additionalProperties", Json(false)},
+  }));
+  const auto instance = make_document(Json::object({{"x-value", 1}}));
+
+  const auto without_matcher = schema.validate(instance.root());
+  OASCPP_CHECK(!without_matcher.ok());
+  OASCPP_CHECK(!without_matcher.complete());
+  OASCPP_CHECK(without_matcher.empty());
+
+  js::ValidationOptions options;
+  options.pattern_matcher = [](std::string_view pattern, std::string_view candidate) {
+    return pattern == "^x" && !candidate.empty() && candidate.front() == 'x';
+  };
+  const auto with_matcher = schema.validate(instance.root(), options);
+  OASCPP_CHECK(with_matcher.ok());
+  OASCPP_CHECK(with_matcher.complete());
+}
+
+OASCPP_TEST(schema_marks_unimplemented_unevaluated_and_dynamic_keywords_incomplete) {
+  const js::Schema properties_schema = compile_or_fail(Json::object({{"unevaluatedProperties", false}}));
+  const auto object = make_document(Json::object({{"extra", 1}}));
+  const auto properties_result = properties_schema.validate(object.root());
+  OASCPP_CHECK(!properties_result.ok());
+  OASCPP_CHECK(!properties_result.complete());
+  OASCPP_CHECK(properties_result.empty());
+
+  const js::Schema items_schema = compile_or_fail(Json::object({{"unevaluatedItems", false}}));
+  const auto array = make_document(Json::array({1}));
+  const auto items_result = items_schema.validate(array.root());
+  OASCPP_CHECK(!items_result.ok());
+  OASCPP_CHECK(!items_result.complete());
+  OASCPP_CHECK(items_result.empty());
+
+  const js::Schema dynamic_schema = compile_or_fail(Json::object({
+      {"$defs", Json::object({{"node", Json::object({
+                                           {"$dynamicAnchor", "node"},
+                                           {"type", "string"},
+                                       })}})},
+      {"$dynamicRef", "#node"},
+  }));
+  const auto string = make_document(Json("value"));
+  const auto dynamic_result = dynamic_schema.validate(string.root());
+  OASCPP_CHECK(!dynamic_result.ok());
+  OASCPP_CHECK(!dynamic_result.complete());
 }
 
 OASCPP_TEST(schema_compile_rejects_bad_input) {

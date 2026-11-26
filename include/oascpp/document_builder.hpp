@@ -43,10 +43,12 @@ class DocumentBuilder {
   [[nodiscard]] NodeId make_object();
 
   // Appends an element to an array, preserving creation order.
+  // Throws for invalid IDs, a non-array parent, reattaching a node, or a cycle.
   void append(NodeId parent, NodeId child);
 
   // Appends a member to an object. Empty member names are legal JSON, so the
   // array and object paths are separate overloads rather than a defaulted key.
+  // Throws for invalid IDs, a non-object parent, reattaching a node, or a cycle.
   void append_member(NodeId parent, std::string_view key, NodeId child);
 
   [[nodiscard]] std::size_t size() const noexcept;
@@ -57,6 +59,7 @@ class DocumentBuilder {
  private:
   [[nodiscard]] NodeId push(ValueKind kind);
   void store_text(detail::Node& node, std::string_view text);
+  void validate_link(NodeId parent, NodeId child, ValueKind parent_kind) const;
   void link(NodeId parent, NodeId child);
 
   std::vector<detail::Node> nodes_;
@@ -64,6 +67,7 @@ class DocumentBuilder {
   std::vector<NodeId> first_child_;
   std::vector<NodeId> last_child_;
   std::vector<NodeId> next_sibling_;
+  std::vector<NodeId> parent_;
 };
 
 }  // namespace oascpp

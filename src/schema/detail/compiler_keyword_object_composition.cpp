@@ -177,6 +177,10 @@ void SchemaCompiler::read_value_keywords(SchemaNode& node, ValueView view) {
       fail(ErrorCode::schema_invalid, "enum must be an array");
       return;
     }
+    if (enum_values.empty()) {
+      fail(ErrorCode::schema_invalid, "enum must contain at least one value");
+      return;
+    }
     std::vector<std::uint32_t> indices;
     indices.reserve(enum_values.size());
     for (const ValueView element : enum_values) {

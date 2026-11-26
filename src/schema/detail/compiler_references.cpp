@@ -83,6 +83,10 @@ void SchemaCompiler::build_anchor_index() {
       if (anchor.valid() && anchor.is_string()) {
         anchors_.emplace(std::string(anchor.as_string()), current.index());
       }
+      const ValueView dynamic_anchor = current.find("$dynamicAnchor");
+      if (dynamic_anchor.valid() && dynamic_anchor.is_string()) {
+        anchors_.emplace(std::string(dynamic_anchor.as_string()), current.index());
+      }
     }
     if (current.is_container()) {
       for (const ValueView child : current) {

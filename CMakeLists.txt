@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(oascpp
-  VERSION 0.1.0
-  DESCRIPTION "OpenAPI 3.0/3.1 validation library for modern C++"
+  VERSION 0.3.0
+  DESCRIPTION "JSON Schema validation core for OpenAPI-oriented C++ projects"
   LANGUAGES CXX)
 
 include(GNUInstallDirs)

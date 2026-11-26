@@ -124,6 +124,8 @@ struct SchemaNode {
 
   // Index of the node this schema was compiled from, in the schema document.
   std::uint32_t source = 0;
+  std::uint32_t schema_path_off = 0;
+  std::uint32_t schema_path_len = 0;
 
   SchemaId ref = no_schema;
   SchemaId dynamic_ref = no_schema;
@@ -138,11 +140,11 @@ struct SchemaNode {
   SchemaId unevaluated_properties = no_schema;
   SchemaId unevaluated_items = no_schema;
 
-  double minimum = 0.0;
-  double maximum = 0.0;
-  double exclusive_minimum = 0.0;
-  double exclusive_maximum = 0.0;
-  double multiple_of = 0.0;
+  NumberView minimum;
+  NumberView maximum;
+  NumberView exclusive_minimum;
+  NumberView exclusive_maximum;
+  NumberView multiple_of;
 
   SchemaRun all_of;
   SchemaRun any_of;
@@ -156,14 +158,14 @@ struct SchemaNode {
   SchemaRun enum_values;
 
   std::uint32_t const_value = 0;
-  std::uint32_t min_length = 0;
-  std::uint32_t max_length = 0;
-  std::uint32_t min_items = 0;
-  std::uint32_t max_items = 0;
-  std::uint32_t min_properties = 0;
-  std::uint32_t max_properties = 0;
-  std::uint32_t min_contains = 0;
-  std::uint32_t max_contains = 0;
+  std::uint64_t min_length = 0;
+  std::uint64_t max_length = 0;
+  std::uint64_t min_items = 0;
+  std::uint64_t max_items = 0;
+  std::uint64_t min_properties = 0;
+  std::uint64_t max_properties = 0;
+  std::uint64_t min_contains = 0;
+  std::uint64_t max_contains = 0;
 
   std::uint32_t pattern_off = 0;
   std::uint32_t pattern_len = 0;
@@ -182,12 +184,21 @@ class CompiledSchema {
   [[nodiscard]] std::size_t size() const noexcept { return nodes_.size(); }
   [[nodiscard]] const DialectProfile& profile() const noexcept { return profile_; }
 
-  [[nodiscard]] const SchemaNode& node(SchemaId id) const noexcept { return nodes_[id]; }
+  // Throws std::out_of_range when id is not part of this compiled graph.
+  [[nodiscard]] const SchemaNode& node(SchemaId id) const { return nodes_.at(id); }
 
-  [[nodiscard]] const ParsedDocument& document() const noexcept { return *document_; }
+  // Invalid default-constructed schemas expose an empty document.
+  [[nodiscard]] const ParsedDocument& document() const noexcept {
+    static const ParsedDocument empty_document;
+    return document_ == nullptr ? empty_document : *document_;
+  }
 
   [[nodiscard]] std::string_view text(std::uint32_t off, std::uint32_t len) const noexcept {
     return std::string_view(text_.data() + off, static_cast<std::size_t>(len));
+  }
+
+  [[nodiscard]] std::string_view schema_path(const SchemaNode& node) const noexcept {
+    return text(node.schema_path_off, node.schema_path_len);
   }
 
   [[nodiscard]] std::string_view key(const MemberEntry& entry) const noexcept {

@@ -26,6 +26,7 @@ OASCPP_TEST(error_path_empty_formats_as_the_root_pointer) {
 OASCPP_TEST(validation_result_accumulates_errors) {
   oascpp::ValidationResult result;
   OASCPP_CHECK(result.ok());
+  OASCPP_CHECK(result.complete());
   OASCPP_CHECK(result.empty());
   OASCPP_CHECK_EQ(result.error_count(), std::size_t{0});
   OASCPP_CHECK(result.first_error() == nullptr);
@@ -48,6 +49,7 @@ OASCPP_TEST(validation_result_accumulates_errors) {
 
   result.clear();
   OASCPP_CHECK(result.ok());
+  OASCPP_CHECK(result.complete());
   OASCPP_CHECK(result.first_error() == nullptr);
 }
 

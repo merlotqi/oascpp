@@ -58,6 +58,15 @@ struct NumberView {
 
 namespace detail {
 
+enum class NumberOrder : std::int8_t {
+  less = -1,
+  equal = 0,
+  greater = 1,
+  unordered = 2,
+};
+
+[[nodiscard]] NumberOrder compare_numbers(const NumberView& lhs, const NumberView& rhs) noexcept;
+
 // Node flags. Only node_flag_unsigned is produced by DocumentBuilder today; the
 // remaining bits are reserved for exact number tokens and future needs.
 enum NodeFlags : std::uint8_t {

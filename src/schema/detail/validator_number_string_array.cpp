@@ -7,21 +7,24 @@ bool ValidationRun::check_number(const SchemaNode& node, ValueView instance, Err
   if (!instance.is_number()) {
     return true;
   }
-  const double value = instance.as_double();
+  const NumberView value = instance.as_number();
+  const auto compare = [&value](const NumberView& bound) { return oascpp::detail::compare_numbers(value, bound); };
   bool ok = true;
-  if (has_keyword(node.present, Keyword::minimum) && value < node.minimum) {
+  if (has_keyword(node.present, Keyword::minimum) && compare(node.minimum) == oascpp::detail::NumberOrder::less) {
     add(path, ErrorCode::numeric_minimum, "value is below the minimum");
     ok = false;
   }
-  if (has_keyword(node.present, Keyword::maximum) && value > node.maximum) {
+  if (has_keyword(node.present, Keyword::maximum) && compare(node.maximum) == oascpp::detail::NumberOrder::greater) {
     add(path, ErrorCode::numeric_maximum, "value is above the maximum");
     ok = false;
   }
-  if (has_keyword(node.present, Keyword::exclusive_minimum) && !(value > node.exclusive_minimum)) {
+  if (has_keyword(node.present, Keyword::exclusive_minimum) &&
+      compare(node.exclusive_minimum) != oascpp::detail::NumberOrder::greater) {
     add(path, ErrorCode::numeric_exclusive_minimum, "value is not above the exclusive minimum");
     ok = false;
   }
-  if (has_keyword(node.present, Keyword::exclusive_maximum) && !(value < node.exclusive_maximum)) {
+  if (has_keyword(node.present, Keyword::exclusive_maximum) &&
+      compare(node.exclusive_maximum) != oascpp::detail::NumberOrder::less) {
     add(path, ErrorCode::numeric_exclusive_maximum, "value is not below the exclusive maximum");
     ok = false;
   }
@@ -55,6 +58,8 @@ bool ValidationRun::check_string(const SchemaNode& node, ValueView instance, Err
         add(path, ErrorCode::string_pattern, "string does not match the pattern");
         ok = false;
       }
+    } else {
+      result_.mark_incomplete();
     }
   }
   if (has_keyword(node.present, Keyword::format)) {
@@ -63,6 +68,8 @@ bool ValidationRun::check_string(const SchemaNode& node, ValueView instance, Err
         add(path, ErrorCode::string_format, "string does not match the format");
         ok = false;
       }
+    } else {
+      result_.mark_incomplete();
     }
   }
   return ok;
@@ -71,6 +78,9 @@ bool ValidationRun::check_string(const SchemaNode& node, ValueView instance, Err
 bool ValidationRun::check_array(const SchemaNode& node, ValueView instance, ErrorPath* path) {
   if (!instance.is_array()) {
     return true;
+  }
+  if (has_keyword(node.present, Keyword::unevaluated_items)) {
+    result_.mark_incomplete();
   }
   const std::size_t size = instance.size();
   bool ok = true;

@@ -23,6 +23,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace oascpp::schema {
 
@@ -43,6 +44,8 @@ class SchemaCompiler {
   // --- driver -------------------------------------------------------------
 
   void compile_root(ValueView root);
+  void build_source_locations(ValueView root);
+  [[nodiscard]] std::string source_path(std::uint32_t source) const;
   [[nodiscard]] SchemaId compile_schema(ValueView view);
   void fill_node(SchemaNode& node, ValueView view);
 
@@ -88,9 +91,9 @@ class SchemaCompiler {
 
   // --- small conversions --------------------------------------------------
 
-  [[nodiscard]] bool read_number(ValueView view, const char* keyword, double& out_value);
+  [[nodiscard]] bool read_number(ValueView view, const char* keyword, NumberView& out_value);
 
-  [[nodiscard]] bool read_unsigned(ValueView view, const char* keyword, std::uint32_t& out_value);
+  [[nodiscard]] bool read_unsigned(ValueView view, const char* keyword, std::uint64_t& out_value);
 
   [[nodiscard]] bool type_bit(std::string_view name, std::uint8_t& out_bit);
 
@@ -102,6 +105,11 @@ class SchemaCompiler {
 
   std::unordered_map<std::uint32_t, SchemaId> compiled_;
   std::unordered_map<std::string, std::uint32_t> anchors_;
+  struct SourceLocation {
+    std::uint32_t parent = no_schema;
+    std::uint32_t position = 0;
+  };
+  std::vector<SourceLocation> source_locations_;
   bool anchors_built_ = false;
 
   bool failed_ = false;

@@ -76,6 +76,10 @@ void SchemaCompiler::read_array_keywords(SchemaNode& node, ValueView view) {
 
   const ValueView prefix_items = view.find("prefixItems");
   if (prefix_items.valid()) {
+    if (!schema_.profile_.has_prefix_items) {
+      fail(ErrorCode::schema_invalid, "prefixItems is not supported by this dialect");
+      return;
+    }
     node.prefix_items = compile_schema_run(prefix_items, "prefixItems");
     if (failed_) {
       return;
@@ -86,6 +90,10 @@ void SchemaCompiler::read_array_keywords(SchemaNode& node, ValueView view) {
   const ValueView items = view.find("items");
   if (items.valid()) {
     if (items.is_array()) {
+      if (schema_.profile_.has_prefix_items || schema_.profile_.allows_nullable) {
+        fail(ErrorCode::schema_invalid, "items must be a schema in this dialect");
+        return;
+      }
       // Legacy tuple form (draft4 through draft7).
       node.prefix_items = compile_schema_run(items, "items");
       if (failed_) {
@@ -111,6 +119,10 @@ void SchemaCompiler::read_array_keywords(SchemaNode& node, ValueView view) {
 
   const ValueView contains = view.find("contains");
   if (contains.valid()) {
+    if (!schema_.profile_.has_contains) {
+      fail(ErrorCode::schema_invalid, "contains is not supported by this dialect");
+      return;
+    }
     node.contains = compile_schema(contains);
     if (failed_) {
       return;

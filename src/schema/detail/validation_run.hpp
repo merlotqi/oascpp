@@ -32,13 +32,14 @@ class ValidationRun {
   bool check_member(SchemaId id, ValueView value, std::string_view name, ErrorPath* path);
   bool check_element(SchemaId id, ValueView value, std::size_t index, ErrorPath* path);
   [[nodiscard]] ValueView make_string_view(std::string_view text);
-  [[nodiscard]] bool is_multiple_of(double value, double divisor) const;
+  [[nodiscard]] bool is_multiple_of(NumberView value, NumberView divisor) const;
   void add(ErrorPath* path, ErrorCode code, const char* message);
 
   const CompiledSchema& schema_;
   ValidationOptions options_;
   ValidationResult result_;
   std::vector<std::pair<SchemaId, std::uint32_t>> active_;
+  std::vector<ErrorPath> schema_paths_;
   std::vector<std::unique_ptr<ParsedDocument>> scratch_;
   std::size_t depth_ = 0;
 };

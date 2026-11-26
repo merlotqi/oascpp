@@ -30,6 +30,7 @@ void SchemaCompiler::compile_root(ValueView root) {
     fail(ErrorCode::schema_invalid, "schema document is empty");
     return;
   }
+  build_source_locations(root);
   const SchemaId root_id = compile_schema(root);
   if (failed_) {
     return;
@@ -37,6 +38,58 @@ void SchemaCompiler::compile_root(ValueView root) {
   schema_.root_ = root_id;
   // Sentinel so text() can always form a valid view from data() + offset.
   schema_.text_.push_back('\0');
+}
+
+void SchemaCompiler::build_source_locations(ValueView root) {
+  struct Pending {
+    ValueView view;
+    std::uint32_t parent;
+    std::uint32_t position;
+  };
+
+  source_locations_.resize(document_.node_count());
+  std::vector<Pending> pending;
+  pending.push_back({root, no_schema, 0});
+  while (!pending.empty()) {
+    Pending current = std::move(pending.back());
+    pending.pop_back();
+    source_locations_[current.view.index()] = {current.parent, current.position};
+
+    if (current.view.is_object()) {
+      std::uint32_t position = 0;
+      for (const ValueView member : current.view) {
+        pending.push_back({member, current.view.index(), position++});
+      }
+    } else if (current.view.is_array()) {
+      for (std::size_t index = 0; index < current.view.size(); ++index) {
+        pending.push_back({current.view.at(index), current.view.index(), static_cast<std::uint32_t>(index)});
+      }
+    }
+  }
+}
+
+std::string SchemaCompiler::source_path(std::uint32_t source) const {
+  std::vector<std::string> tokens;
+  while (source < source_locations_.size()) {
+    const SourceLocation& location = source_locations_[source];
+    if (location.parent == no_schema) {
+      break;
+    }
+    const ValueView parent(&document_, location.parent);
+    if (parent.is_object()) {
+      tokens.emplace_back(ValueView(&document_, source).key());
+    } else {
+      tokens.push_back(std::to_string(location.position));
+    }
+    source = location.parent;
+  }
+
+  std::string path;
+  for (auto token = tokens.rbegin(); token != tokens.rend(); ++token) {
+    path.push_back('/');
+    append_escaped_pointer_token(path, *token);
+  }
+  return path;
 }
 
 SchemaId SchemaCompiler::compile_schema(ValueView view) {
@@ -69,6 +122,10 @@ SchemaId SchemaCompiler::compile_schema(ValueView view) {
 
   SchemaNode node;
   node.source = source;
+  if (source < source_locations_.size()) {
+    const std::string path = source_path(source);
+    append_text(node.schema_path_off, node.schema_path_len, path);
+  }
   ++depth_;
   fill_node(node, view);
   --depth_;

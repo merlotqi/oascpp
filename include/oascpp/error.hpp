@@ -223,8 +223,12 @@ class ValidationResult {
  public:
   ValidationResult() = default;
 
+  // True only when validation found no failure and evaluated all applicable
+  // assertions. Unavailable keyword callbacks make a result incomplete;
+  // max_errors may omit diagnostics but does not change validation status.
   [[nodiscard]] bool ok() const noexcept;
   explicit operator bool() const noexcept;
+  [[nodiscard]] bool complete() const noexcept;
 
   [[nodiscard]] std::size_t error_count() const noexcept;
   [[nodiscard]] bool empty() const noexcept;
@@ -233,6 +237,8 @@ class ValidationResult {
   [[nodiscard]] const ValidationError* first_error() const noexcept;
   [[nodiscard]] ErrorCode first_error_code() const noexcept;
   void add_error(ValidationError error);
+  void mark_invalid() noexcept;
+  void mark_incomplete() noexcept;
 
   // Hints the size of the error list up front, which keeps the common "valid
   // document, no errors" case allocation free.
@@ -241,6 +247,8 @@ class ValidationResult {
   void clear() noexcept;
 
  private:
+  bool valid_ = true;
+  bool complete_ = true;
   std::vector<ValidationError> errors_;
 };
 

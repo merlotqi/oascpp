@@ -1,9 +1,134 @@
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include <oascpp/value.hpp>
 
 namespace oascpp {
 namespace detail {
+
+namespace {
+
+NumberOrder compare_signed_real(std::int64_t integer, double real) noexcept {
+  if (std::isnan(real)) {
+    return NumberOrder::unordered;
+  }
+  if (real >= 0x1p63) {
+    return NumberOrder::less;
+  }
+  if (real < -0x1p63) {
+    return NumberOrder::greater;
+  }
+
+  const std::int64_t real_integer = static_cast<std::int64_t>(real);
+  if (integer < real_integer) {
+    return NumberOrder::less;
+  }
+  if (integer > real_integer) {
+    return NumberOrder::greater;
+  }
+  if (real > static_cast<double>(real_integer)) {
+    return NumberOrder::less;
+  }
+  if (real < static_cast<double>(real_integer)) {
+    return NumberOrder::greater;
+  }
+  return NumberOrder::equal;
+}
+
+NumberOrder compare_unsigned_real(std::uint64_t integer, double real) noexcept {
+  if (std::isnan(real)) {
+    return NumberOrder::unordered;
+  }
+  if (real < 0.0) {
+    return NumberOrder::greater;
+  }
+  if (real >= 0x1p64) {
+    return NumberOrder::less;
+  }
+
+  const std::uint64_t real_integer = static_cast<std::uint64_t>(real);
+  if (integer < real_integer) {
+    return NumberOrder::less;
+  }
+  if (integer > real_integer) {
+    return NumberOrder::greater;
+  }
+  if (real > static_cast<double>(real_integer)) {
+    return NumberOrder::less;
+  }
+  if (real < static_cast<double>(real_integer)) {
+    return NumberOrder::greater;
+  }
+  return NumberOrder::equal;
+}
+
+NumberOrder reverse(NumberOrder order) noexcept {
+  if (order == NumberOrder::less) {
+    return NumberOrder::greater;
+  }
+  if (order == NumberOrder::greater) {
+    return NumberOrder::less;
+  }
+  return order;
+}
+
+}  // namespace
+
+NumberOrder compare_numbers(const NumberView& lhs, const NumberView& rhs) noexcept {
+  if (lhs.is_integer && rhs.is_integer) {
+    if (!lhs.is_unsigned && !rhs.is_unsigned) {
+      if (lhs.as_signed < rhs.as_signed) {
+        return NumberOrder::less;
+      }
+      if (lhs.as_signed > rhs.as_signed) {
+        return NumberOrder::greater;
+      }
+      return NumberOrder::equal;
+    }
+    if (lhs.is_unsigned && rhs.is_unsigned) {
+      if (lhs.as_unsigned < rhs.as_unsigned) {
+        return NumberOrder::less;
+      }
+      if (lhs.as_unsigned > rhs.as_unsigned) {
+        return NumberOrder::greater;
+      }
+      return NumberOrder::equal;
+    }
+    if (lhs.is_unsigned) {
+      if (rhs.as_signed < 0) {
+        return NumberOrder::greater;
+      }
+      const std::uint64_t signed_value = static_cast<std::uint64_t>(rhs.as_signed);
+      if (lhs.as_unsigned < signed_value) {
+        return NumberOrder::less;
+      }
+      if (lhs.as_unsigned > signed_value) {
+        return NumberOrder::greater;
+      }
+      return NumberOrder::equal;
+    }
+    return reverse(compare_numbers(rhs, lhs));
+  }
+
+  if (lhs.is_integer) {
+    return lhs.is_unsigned ? compare_unsigned_real(lhs.as_unsigned, rhs.as_real)
+                           : compare_signed_real(lhs.as_signed, rhs.as_real);
+  }
+  if (rhs.is_integer) {
+    return reverse(rhs.is_unsigned ? compare_unsigned_real(rhs.as_unsigned, lhs.as_real)
+                                   : compare_signed_real(rhs.as_signed, lhs.as_real));
+  }
+  if (std::isnan(lhs.as_real) || std::isnan(rhs.as_real)) {
+    return NumberOrder::unordered;
+  }
+  if (lhs.as_real < rhs.as_real) {
+    return NumberOrder::less;
+  }
+  if (lhs.as_real > rhs.as_real) {
+    return NumberOrder::greater;
+  }
+  return NumberOrder::equal;
+}
 
 double decode_double(std::uint64_t bits) noexcept {
   double value = 0.0;
@@ -186,18 +311,7 @@ bool deep_equal(const ValueView& lhs, const ValueView& rhs) noexcept {
     }
     const NumberView a = lhs.as_number();
     const NumberView b = rhs.as_number();
-    if (a.is_integer && b.is_integer) {
-      if (a.is_unsigned && b.is_unsigned) {
-        return a.as_unsigned == b.as_unsigned;
-      }
-      if (!a.is_unsigned && !b.is_unsigned) {
-        return a.as_signed == b.as_signed;
-      }
-      const NumberView& wide = a.is_unsigned ? a : b;
-      const NumberView& narrow = a.is_unsigned ? b : a;
-      return narrow.as_signed >= 0 && wide.as_unsigned == static_cast<std::uint64_t>(narrow.as_signed);
-    }
-    return a.as_real == b.as_real;
+    return detail::compare_numbers(a, b) == detail::NumberOrder::equal;
   }
 
   if (lhs_kind != rhs_kind) {

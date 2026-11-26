@@ -44,9 +44,11 @@ std::string ErrorPath::to_string() const {
   return out;
 }
 
-bool ValidationResult::ok() const noexcept { return errors_.empty(); }
+bool ValidationResult::ok() const noexcept { return valid_ && complete_; }
 
 ValidationResult::operator bool() const noexcept { return ok(); }
+
+bool ValidationResult::complete() const noexcept { return complete_; }
 
 std::size_t ValidationResult::error_count() const noexcept { return errors_.size(); }
 
@@ -62,7 +64,14 @@ ErrorCode ValidationResult::first_error_code() const noexcept {
   return errors_.empty() ? ErrorCode::none : errors_.front().code;
 }
 
-void ValidationResult::add_error(ValidationError error) { errors_.push_back(std::move(error)); }
+void ValidationResult::add_error(ValidationError error) {
+  valid_ = false;
+  errors_.push_back(std::move(error));
+}
+
+void ValidationResult::mark_invalid() noexcept { valid_ = false; }
+
+void ValidationResult::mark_incomplete() noexcept { complete_ = false; }
 
 void ValidationResult::reserve(std::size_t count) { errors_.reserve(count); }
 
@@ -70,8 +79,13 @@ void ValidationResult::add(ErrorCode code) {
   ValidationError error;
   error.code = code;
   errors_.push_back(std::move(error));
+  valid_ = false;
 }
 
-void ValidationResult::clear() noexcept { errors_.clear(); }
+void ValidationResult::clear() noexcept {
+  errors_.clear();
+  valid_ = true;
+  complete_ = true;
+}
 
 }  // namespace oascpp

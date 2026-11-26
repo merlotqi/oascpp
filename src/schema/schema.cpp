@@ -19,9 +19,12 @@ bool Schema::valid() const noexcept { return compiled_.valid(); }
 
 const CompiledSchema& Schema::compiled() const noexcept { return compiled_; }
 
-const ParsedDocument& Schema::document() const noexcept { return *document_; }
+const ParsedDocument& Schema::document() const noexcept {
+  static const ParsedDocument empty_document;
+  return document_ == nullptr ? empty_document : *document_;
+}
 
-ValueView Schema::root() const noexcept { return document_->root(); }
+ValueView Schema::root() const noexcept { return document_ == nullptr ? ValueView() : document_->root(); }
 
 ValidationResult Schema::validate(ValueView instance, ValidationOptions options) const {
   return schema::validate(compiled_, instance, std::move(options));

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <oascpp/schema/compiler.hpp>
 
 namespace oascpp::schema {
@@ -137,34 +138,40 @@ void SchemaCompiler::append_text(std::uint32_t& off, std::uint32_t& len, std::st
   schema_.text_.insert(schema_.text_.end(), value.begin(), value.end());
 }
 
-[[nodiscard]] bool SchemaCompiler::read_number(ValueView view, const char* keyword, double& out_value) {
+[[nodiscard]] bool SchemaCompiler::read_number(ValueView view, const char* keyword, NumberView& out_value) {
   if (!view.is_number()) {
     fail(ErrorCode::schema_invalid, std::string(keyword) + " must be a number");
     return false;
   }
-  out_value = view.as_number().as_real;
+  out_value = view.as_number();
   return true;
 }
 
-[[nodiscard]] bool SchemaCompiler::read_unsigned(ValueView view, const char* keyword, std::uint32_t& out_value) {
-  if (!view.is_integer()) {
+[[nodiscard]] bool SchemaCompiler::read_unsigned(ValueView view, const char* keyword, std::uint64_t& out_value) {
+  if (!view.is_number()) {
     fail(ErrorCode::schema_invalid, std::string(keyword) + " must be a non-negative integer");
     return false;
   }
   const NumberView number = view.as_number();
-  if (number.is_unsigned) {
-    if (number.as_unsigned > 4294967295ull) {
-      fail(ErrorCode::schema_invalid, std::string(keyword) + " is too large");
-      return false;
-    }
-    out_value = static_cast<std::uint32_t>(number.as_unsigned);
+  if (number.is_integer && number.is_unsigned) {
+    out_value = number.as_unsigned;
     return true;
   }
-  if (number.as_signed < 0) {
+  if (number.is_integer && number.as_signed < 0) {
     fail(ErrorCode::schema_invalid, std::string(keyword) + " must be a non-negative integer");
     return false;
   }
-  out_value = static_cast<std::uint32_t>(number.as_signed);
+  if (number.is_integer) {
+    out_value = static_cast<std::uint64_t>(number.as_signed);
+    return true;
+  }
+
+  const double value = number.as_real;
+  if (!std::isfinite(value) || value < 0.0 || std::floor(value) != value || value >= 0x1p64) {
+    fail(ErrorCode::schema_invalid, std::string(keyword) + " must be a non-negative integer");
+    return false;
+  }
+  out_value = static_cast<std::uint64_t>(value);
   return true;
 }
 

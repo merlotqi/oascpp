@@ -1,5 +1,6 @@
 #include <cassert>
 #include <oascpp/document_builder.hpp>
+#include <stdexcept>
 
 namespace oascpp {
 
@@ -8,6 +9,7 @@ void DocumentBuilder::reserve(std::size_t node_count, std::size_t char_count) {
   first_child_.reserve(node_count);
   last_child_.reserve(node_count);
   next_sibling_.reserve(node_count);
+  parent_.reserve(node_count);
   chars_.reserve(char_count);
 }
 
@@ -49,20 +51,18 @@ DocumentBuilder::NodeId DocumentBuilder::make_array() { return push(ValueKind::a
 DocumentBuilder::NodeId DocumentBuilder::make_object() { return push(ValueKind::object); }
 
 void DocumentBuilder::append(NodeId parent, NodeId child) {
-  assert(parent < nodes_.size());
-  assert(child < nodes_.size());
-  assert(nodes_[parent].kind == ValueKind::array);
+  validate_link(parent, child, ValueKind::array);
   link(parent, child);
 }
 
 void DocumentBuilder::append_member(NodeId parent, std::string_view key, NodeId child) {
-  assert(parent < nodes_.size());
-  assert(child < nodes_.size());
-  assert(nodes_[parent].kind == ValueKind::object);
-  detail::Node& target = nodes_[child];
-  target.key_off = static_cast<std::uint32_t>(chars_.size());
-  target.key_len = static_cast<std::uint32_t>(key.size());
+  validate_link(parent, child, ValueKind::object);
+  const std::uint32_t key_off = static_cast<std::uint32_t>(chars_.size());
+  const std::uint32_t key_len = static_cast<std::uint32_t>(key.size());
   chars_.insert(chars_.end(), key.begin(), key.end());
+  detail::Node& target = nodes_[child];
+  target.key_off = key_off;
+  target.key_len = key_len;
   link(parent, child);
 }
 
@@ -94,6 +94,7 @@ ParsedDocument DocumentBuilder::finish() {
   first_child_.clear();
   last_child_.clear();
   next_sibling_.clear();
+  parent_.clear();
   return doc;
 }
 
@@ -106,6 +107,7 @@ DocumentBuilder::NodeId DocumentBuilder::push(ValueKind kind) {
   first_child_.push_back(invalid_node);
   last_child_.push_back(invalid_node);
   next_sibling_.push_back(invalid_node);
+  parent_.push_back(invalid_node);
   return id;
 }
 
@@ -115,6 +117,23 @@ void DocumentBuilder::store_text(detail::Node& node, std::string_view text) {
   chars_.insert(chars_.end(), text.begin(), text.end());
 }
 
+void DocumentBuilder::validate_link(NodeId parent, NodeId child, ValueKind parent_kind) const {
+  if (parent >= nodes_.size() || child >= nodes_.size()) {
+    throw std::out_of_range("DocumentBuilder node id is out of range");
+  }
+  if (nodes_[parent].kind != parent_kind) {
+    throw std::invalid_argument("DocumentBuilder parent has the wrong container type");
+  }
+  if (parent == child || parent_[child] != invalid_node) {
+    throw std::logic_error("DocumentBuilder nodes may be attached only once without cycles");
+  }
+  for (NodeId ancestor = parent; ancestor != invalid_node; ancestor = parent_[ancestor]) {
+    if (ancestor == child) {
+      throw std::logic_error("DocumentBuilder nodes may be attached only once without cycles");
+    }
+  }
+}
+
 void DocumentBuilder::link(NodeId parent, NodeId child) {
   if (first_child_[parent] == invalid_node) {
     first_child_[parent] = child;
@@ -122,6 +141,7 @@ void DocumentBuilder::link(NodeId parent, NodeId child) {
     next_sibling_[last_child_[parent]] = child;
   }
   last_child_[parent] = child;
+  parent_[child] = parent;
 }
 
 }  // namespace oascpp

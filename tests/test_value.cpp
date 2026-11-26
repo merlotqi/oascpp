@@ -2,9 +2,11 @@
 #include <cstdint>
 #include <oascpp/document_builder.hpp>
 #include <oascpp/value.hpp>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
+#include "json_dsl.hpp"
 #include "test_framework.hpp"
 
 namespace {
@@ -178,4 +180,44 @@ OASCPP_TEST(value_compares_by_identity) {
   OASCPP_CHECK(root == document.root());
   OASCPP_CHECK(root != root.find("name"));
   OASCPP_CHECK(ValueView() == ValueView());
+}
+
+OASCPP_TEST(value_compares_large_numbers_without_rounding_integers) {
+  const ParsedDocument integer = make_document(oascpp_test::Json(9007199254740993LL));
+  const ParsedDocument rounded_real = make_document(oascpp_test::Json(9007199254740992.0));
+
+  OASCPP_CHECK(!oascpp::deep_equal(integer.root(), rounded_real.root()));
+}
+
+OASCPP_TEST(document_builder_rejects_reused_nodes_and_cycles) {
+  DocumentBuilder builder;
+  const auto root = builder.make_array();
+  const auto object = builder.make_object();
+  const auto nested = builder.make_array();
+
+  bool wrong_parent_rejected = false;
+  try {
+    builder.append_member(root, "bad", object);
+  } catch (const std::invalid_argument&) {
+    wrong_parent_rejected = true;
+  }
+  OASCPP_CHECK(wrong_parent_rejected);
+
+  builder.append(root, object);
+  bool reused_node_rejected = false;
+  try {
+    builder.append(root, object);
+  } catch (const std::logic_error&) {
+    reused_node_rejected = true;
+  }
+  OASCPP_CHECK(reused_node_rejected);
+
+  builder.append_member(object, "nested", nested);
+  bool cycle_rejected = false;
+  try {
+    builder.append(nested, root);
+  } catch (const std::logic_error&) {
+    cycle_rejected = true;
+  }
+  OASCPP_CHECK(cycle_rejected);
 }

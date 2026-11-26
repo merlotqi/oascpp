@@ -1,7 +1,9 @@
 # oascpp
 
-Static C++17 library for OpenAPI 3.0 / 3.1 validation. Template-based bindings
-and optional backend adapters remain header-based.
+Static C++17 library with an early JSON Schema validation core for
+OpenAPI-oriented applications. It does not yet validate complete OpenAPI
+documents or request/response exchanges. Template-based bindings and optional
+backend adapters remain header-based.
 
 The goal is a library that validates the *document* and the *exchanges* an OpenAPI
 description promises: request parameters and bodies, response payloads, content
@@ -10,7 +12,7 @@ a specific parser.
 
 ## Status
 
-Pre-alpha (v0.2). Available today:
+Pre-alpha (library version 0.3.0). Available today:
 
 - `oascpp/value.hpp` — arena value model (`ParsedDocument`, `ValueView`, `deep_equal`)
 - `oascpp/document_builder.hpp` — arena builder used by adapters and tests
@@ -34,10 +36,18 @@ model, path matching, parameter serialization, request/response pipelines.
   `unsupported_dialect` instead of silently mis-validating.
 - `$ref` is resolved at compile time and cycles are legal. External references
   are a compile error until a loader seam lands.
-- `pattern` and `format` are only interpreted when a matcher is installed in
-  `schema::ValidationOptions`; the core stays free of `<regex>`.
+- `unevaluatedProperties` / `unevaluatedItems` and `$dynamicRef` dynamic scope
+  are not enforced yet; applicable validations are reported as incomplete.
+- Integer constraints and integer equality preserve the stored 64-bit value.
+  Real-number arithmetic, including `multipleOf`, still uses IEEE 754 `double`.
+- `pattern` and `format` require callbacks in `schema::ValidationOptions`; when
+  an applicable keyword has no callback, `ValidationResult::complete()` and
+  `ok()` are false rather than reporting a successful validation. The core stays
+  free of `<regex>`.
 - `propertyNames` validates names through a scratch document so there is exactly
   one interpretation path.
+- `ValidationOptions::max_errors` limits stored diagnostics without changing
+  whether validation succeeds, and validation errors include a schema pointer.
 
 ## Requirements
 
@@ -131,10 +141,10 @@ members writable.
 
 ## Roadmap
 
-1. `v0.2` — JSON Schema 2020-12 core with the official test suite as conformance
-2. `v0.3` — OpenAPI 3.0 dialect lowering and document structural validation
-3. `v0.4` — path matching, parameter serialization, request pipeline
-4. `v0.5` — response validation, content negotiation, security requirements
+1. Complete JSON Schema 2020-12 conformance using the official test suite
+2. Add OpenAPI dialect handling and document structural validation
+3. Add path matching, parameter serialization, and request validation
+4. Add response validation, content negotiation, and security requirements
 
 ## License
 
